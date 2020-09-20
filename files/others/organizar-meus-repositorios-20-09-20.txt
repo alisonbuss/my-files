@@ -1,0 +1,157 @@
+
+Organização dos meus repositórios (20/09/20)
+
+
+COMO ESTÁ:
+
+kharon
+create-basic-structure-for-ddd
+cluster-coreos-terraform
+quickstart-dotnet-core-ddd
+garden-of-eden
+dockprom
+quickstart-mssql-cluster
+quickstart-drone-ci
+quickstart-python3
+quickstart-traefik2
+traefik-on-swarm
+nx-monorepo-docker
+quickstart-mssql
+RestWithASP-NETUdemy
+terraform-provider-vagrant
+my-garden-of-eden-light
+coreos-packer
+cluster-coreos-kubernetes-vagrant
+cluster-coreos-kubernetes-ansible
+curso-aws-com-terraform
+Library
+my-posts
+crud-angular6
+publish-articles-angular
+new-garden-of-eden
+cluster-kubernetes-ansible-vagrant
+terraform-com-docker-node
+project-initial-ansible
+cluster-coreos-ansible-vagrant
+ubuntu-packer
+shell-script-tools
+ubuntu-vagrant
+centos-vagrant
+sqlserver-docker-alwayson
+centos-packer
+kubernetes-the-hard-way
+alisonbuss.github.io
+cluster-coreos-basic-vagrant
+my-licenses
+modules-for-packer
+ansible-environment
+provider-vagrant-for-terraform
+coreos-kids-vagrant
+multiple-nodes-vagrant
+Databases-Basics---MS-SQL-Server---2017
+Formulation
+QuestionsAnswers-AndroidApp
+
+
+git clone https://github.com/alisonbuss/kharon.git
+git clone https://github.com/alisonbuss/create-basic-structure-for-ddd.git
+git clone https://github.com/alisonbuss/cluster-coreos-terraform.git
+git clone https://github.com/alisonbuss/quickstart-dotnet-core-ddd.git
+git clone https://github.com/alisonbuss/garden-of-eden.git
+git clone https://github.com/alisonbuss/dockprom.git
+git clone https://github.com/alisonbuss/quickstart-mssql-cluster.git
+git clone https://github.com/alisonbuss/quickstart-drone-ci.git
+git clone https://github.com/alisonbuss/quickstart-python3.git
+git clone https://github.com/alisonbuss/quickstart-traefik2.git
+git clone https://github.com/alisonbuss/traefik-on-swarm.git
+git clone https://github.com/alisonbuss/nx-monorepo-docker.git
+git clone https://github.com/alisonbuss/quickstart-mssql.git
+git clone https://github.com/alisonbuss/RestWithASP-NETUdemy.git
+git clone https://github.com/alisonbuss/terraform-provider-vagrant.git
+git clone https://github.com/alisonbuss/my-garden-of-eden-light.git
+git clone https://github.com/alisonbuss/coreos-packer.git
+git clone https://github.com/alisonbuss/cluster-coreos-kubernetes-vagrant.git
+git clone https://github.com/alisonbuss/cluster-coreos-kubernetes-ansible.git
+git clone https://github.com/alisonbuss/curso-aws-com-terraform.git
+git clone https://github.com/alisonbuss/Library.git
+git clone https://github.com/alisonbuss/my-posts.git
+git clone https://github.com/alisonbuss/crud-angular6.git
+git clone https://github.com/alisonbuss/publish-articles-angular.git
+git clone https://github.com/alisonbuss/new-garden-of-eden.git
+git clone https://github.com/alisonbuss/cluster-kubernetes-ansible-vagrant.git
+git clone https://github.com/alisonbuss/terraform-com-docker-node.git
+git clone https://github.com/alisonbuss/project-initial-ansible.git
+git clone https://github.com/alisonbuss/cluster-coreos-ansible-vagrant.git
+git clone https://github.com/alisonbuss/ubuntu-packer.git
+git clone https://github.com/alisonbuss/shell-script-tools.git
+git clone https://github.com/alisonbuss/ubuntu-vagrant.git
+git clone https://github.com/alisonbuss/centos-vagrant.git
+git clone https://github.com/alisonbuss/sqlserver-docker-alwayson.git
+git clone https://github.com/alisonbuss/centos-packer.git
+git clone https://github.com/alisonbuss/kubernetes-the-hard-way.git
+git clone https://github.com/alisonbuss/alisonbuss.github.io.git
+git clone https://github.com/alisonbuss/cluster-coreos-basic-vagrant.git
+git clone https://github.com/alisonbuss/my-licenses.git
+git clone https://github.com/alisonbuss/modules-for-packer.git
+git clone https://github.com/alisonbuss/ansible-environment.git
+git clone https://github.com/alisonbuss/provider-vagrant-for-terraform.git
+git clone https://github.com/alisonbuss/coreos-kids-vagrant.git
+git clone https://github.com/alisonbuss/multiple-nodes-vagrant.git
+git clone https://github.com/alisonbuss/Databases-Basics---MS-SQL-Server---2017.git
+git clone https://github.com/alisonbuss/Formulation.git
+git clone https://github.com/alisonbuss/QuestionsAnswers-AndroidApp.git
+
+
+
+MUDAR DE NOME:
+
+my-licenses > my-files
+nx-monorepo-docker > nx-monorepo-ui
+
+
+PROJETOS DEPRECIADOS:
+
+cluster-coreos-terraform
+terraform-provider-vagrant
+cluster-coreos-kubernetes-vagrant
+cluster-coreos-kubernetes-ansible
+my-posts N
+publish-articles-angular
+cluster-kubernetes-ansible-vagrant
+cluster-coreos-ansible-vagrant
+shell-script-tools
+modules-for-packer
+provider-vagrant-for-terraform
+Formulation
+QuestionsAnswers-AndroidApp
+
+
+PROJETOS NOVOS:
+
+cluster-docker-swarm-ansible
+cluster-docker-swarm-vagrant
+cluster-docker-swarm-terraform
+cluster-kubernetes-ansible
+cluster-kubernetes-vagrant
+cluster-kubernetes-terraform
+quickstart-python-flask
+quickstart-python-fastapi
+quickstart-dotnet-core-api
+quickstart-traefik2-forward-auth
+kraken-gateway (manage-account)
+
+
+EXCLUIR:
+
+quickstart-python3
+my-garden-of-eden-light
+new-garden-of-eden
+
+
+
+
+
+
+
+
+
