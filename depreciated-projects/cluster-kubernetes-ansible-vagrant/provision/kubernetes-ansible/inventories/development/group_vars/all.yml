@@ -1,0 +1,98 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts:
+#-------------------------------------------------------------#
+
+# GLOBAL - ENVIRONMENT VARIABLE:
+###############################################################
+
+# Variable below will be visible in the Ansible:
+# (Inventories, Playbooks, Roles, Tasks)
+# Determine the type of Linux distribution(CoreOS, Ubuntu, CentOS).
+# Default is: coreos
+global_system: coreos
+
+# Variable below will be visible in the Ansible:
+# (Inventories, Playbooks)
+# Variables file for Playbooks.
+global_vars_file:
+  # Public variables to be used in all Tasks and Playbooks.
+  public: "{{playbook_dir}}/library/variables/public.yml"
+   # Specific variables to a given Linux distribution.
+  system: "{{playbook_dir}}/library/variables/support-{{global_system}}.yml"
+  # SSH connection variables, for remote access to the machines.
+  ssh_initial: "{{inventory_dir}}/connection_vars/ssh_initial.yml"
+  ssh_deploy: "{{inventory_dir}}/connection_vars/ssh_deploy.yml"
+
+# GLOBAL - DEFAULT VARIABLES THE OF KUBERNETES CLUSTER:
+###############################################################
+
+# All variables below will be visible in the Ansible:
+# (Inventories, Playbooks)
+
+# Determine the files source directory of the GENERATE/BUILD.
+# Path: /home/you_user/kubernetes...
+global_build_path: "{{ '~/kubernetes/development' | expanduser }}"
+
+# Define source directories.
+global_source_directory:
+  # The directory from where to copy the (Etcd Certificates).
+  etcd_ca: "{{global_build_path}}/certs/etcd"
+  # The directory from where to copy the (Kubernetes Certificates).
+  k8s_ca: "{{global_build_path}}/certs/kubernetes"
+  # The directory from where to copy the (Kubernetes Configs).
+  k8s_configs: "{{global_build_path}}/kubeconfigs"
+  # The directory from where to copy the (Kubernetes Service Configs).
+  k8s_services: "{{global_build_path}}/serviceconfigs"
+
+# NOTE!!!
+# The versions of the tools are already pre-defined by the Packer image.
+# If you want to modify some version, just alter the desired line below:
+# Versions coming from Packer image:
+#   (https://github.com/alisonbuss/coreos-packer)
+global_version:
+  k8s: "1.10.0"
+  etcd: "3.2.15"
+  rkt: "1.30.0"
+  docker: "18.04.0"
+  flannel: "0.10.0"
+  peervpn: "0-044"
+
+# Determine name of the inventory host group.
+global_host_group:
+  all: "cluster_all"
+  etcd: "cluster_etcd"
+  master: "cluster_master"
+  worker: "cluster_worker"
+  k8s_all: "cluster_k8s_all"
+
+# As all cluster communication should use the PeerVPN interface
+global_interface:
+  # the interface name is normally "tap0" or "peervpn0".
+  peervpn: "peervpn0"
+  # The interface on which services should listen.
+  etcd: "peervpn0"
+  master: "peervpn0"
+  worker: "peervpn0"
+
+# CHANGE THIS VALUE!
+# Enable and configure encryption of secret data at rest.
+# Font: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+global_k8s_configs_cluster_name: "cluster-kubernetes-development"
+# Run command to generate key: $ openssl rand -base64 382 | tr -d '\n' && echo
+global_k8s_configs_encryption_key: "YLXdi1xnNLOM4+IUd5aeNO6ps6JaKYTCDaMYJRrD+gk="
+# Run command to generate key: $ openssl rand -base64 382 | tr -d '\n' && echo
+global_peervpn_encryption_key: "YLXdi1xnNLOM4+IUd5aeNO6ps6JaKYTCDaMYJRrD+gk="
+
+# GLOBAL - KUBERNETES SUPPORT SERVICES:
+###############################################################
+
+# Publish the Network Policy Service
+global_k8s_service_calico: false
+
+# Publish HTTP reverse proxy and load balancer
+global_k8s_service_traefik: false
+
+# Publish Kubernetes Web UI (Dashboard)
+global_k8s_service_kube_web: false

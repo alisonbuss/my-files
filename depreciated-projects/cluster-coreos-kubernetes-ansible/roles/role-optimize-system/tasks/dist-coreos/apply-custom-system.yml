@@ -1,0 +1,12 @@
+---
+
+# ISSUE NOTICE:
+- name: "SUB TASK : [ apply-custom-system.yml ]"
+  debug:
+    msg: "START: Defining the initial customization of the system..."
+
+# ISSUE NOTICE:
+- name: "Notification..."
+  debug:
+    msg: "WARNING: The CoreOS system customization has not been defined!!!"
+  run_once: true

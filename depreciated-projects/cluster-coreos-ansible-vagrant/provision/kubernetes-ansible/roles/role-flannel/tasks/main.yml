@@ -1,0 +1,103 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: It installes flanneld which provides functionality for the Kubernetes 
+#         pod network (makes it possible for pods on different hosts to communicate).
+# @fonts: https://github.com/githubixx/ansible-role-flanneld
+#         https://coreos.com/flannel/docs/latest/flannel-config.html
+#-------------------------------------------------------------#
+
+- name: "Combine flannel_settings and flannel_settings_merge (if defined)"
+  set_fact:
+    flannel_settings: "{{ flannel_settings | combine(flannel_settings_merge | default({})) }}"
+
+- name: "Generate address list of ETCD servers"
+  set_fact:
+    var_tmp_etcd_hosts: |
+      {% for host in groups[etcd_group_name] -%}
+          https://{{hostvars[host]['ansible_' + etcd_interface].ipv4.address}}:{{etcd_client_port}}{% if not loop.last %},{% endif %}
+      {%- endfor %}
+
+- name: "Remove rows and spaces from the address list of the ETCDS servers"
+  set_fact:
+    var_etcd_endpoints: "{{ var_tmp_etcd_hosts | replace('\n', '') | replace(' ', '') }}"
+
+- name: "Output of address list of the ETCDS servers"
+  debug: var=var_etcd_endpoints
+
+- name: "Copy certificates (Certificate authority for etcd certificates)"
+  copy:
+    src: "{{etcd_ca_source_directory}}/{{item}}"
+    dest: "{{etcd_certs_dir}}/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "{{etcd_ca_file}}"
+    - "{{etcd_cert_file}}"
+    - "{{etcd_cert_key_file}}"
+
+- name: "Update Certificate authority for etcd certificates"
+  shell: "update-ca-certificates"
+
+- name: "Ensure CNI config directory"
+  file:
+    path: "{{flannel_cni_conf_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Install flanneld CNI config"
+  template:
+    src: "./templates/cni-flannel.conf.j2"
+    dest: "{{flannel_cni_conf_dir}}/{{flannel_cni_conf_file}}.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Create directory from service(flanneld.service)"
+  file:
+    path: "{{flannel_systemd_service_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Create a flanneld service custom file"
+  template:
+    src: "./templates/{{flannel_systemd_custom_file}}.conf.j2"
+    dest: "{{flannel_systemd_service_dir}}/{{flannel_systemd_custom_file}}.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Create network configuration publishing file in etcd"
+  template:
+    src: "./templates/{{flannel_systemd_network_config_file}}.conf.j2"
+    dest: "{{flannel_systemd_service_dir}}/{{flannel_systemd_network_config_file}}.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Adding Environment Variable to ETCDCTL in (/etc/environment)"
+  blockinfile:
+    path: /etc/environment
+    owner: root
+    group: root
+    marker: "# {mark} ENVIRONMENT VARIABLE FOR THE ETCDCTL"
+    block: |
+      ETCDCTL_ENDPOINT="{{var_etcd_endpoints}}"
+      ETCDCTL_CA_FILE="{{etcd_certs_dir}}/{{etcd_ca_file}}"
+      ETCDCTL_CERT_FILE="{{etcd_certs_dir}}/{{etcd_cert_file}}"
+      ETCDCTL_KEY_FILE="{{etcd_certs_dir}}/{{etcd_cert_key_file}}"
+
+- name: "Source the (/etc/environment) file"
+  shell: "source /etc/environment"
+
+- name: "Enable and start flanneld"
+  systemd:
+    daemon_reload: yes
+    name: flanneld
+    enabled: yes
+    state: started
+    no_block: yes

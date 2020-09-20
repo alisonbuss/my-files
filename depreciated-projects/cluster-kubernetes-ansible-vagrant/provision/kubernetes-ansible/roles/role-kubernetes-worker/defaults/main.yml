@@ -1,0 +1,108 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the (K8s Worker) rule.
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-worker
+#         https://serverfault.com/questions/829796/replication-controller-not-found
+#         https://stackoverflow.com/questions/39910852/minikube-got-stuck-when-creating-container/39914584#39914584
+#         https://stackoverflow.com/questions/48190928/kubernetes-pod-remains-in-containercreating-status
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+system_support_coreos: coreos
+
+# The directory from where to copy the K8s certificates. 
+k8s_ca_source_directory: "{{ '~/k8s/certs/kubernetes' | expanduser }}"
+
+# The directory from where to copy the K8s kubeconfigs. 
+k8s_configs_source_directory: "{{ '~/k8s/kubeconfigs' | expanduser }}"
+
+# Kubernetes Version
+k8s_version: "1.10.0"
+# The directory to store the K8s certificates and other configuration
+k8s_conf_dir: "/var/lib/kubernetes"
+# Directory to store kubelet configuration
+k8s_kubelet_conf_dir: "/var/lib/kubelet"
+# Directroy to store kube-proxy configuration
+k8s_kubeproxy_conf_dir: "/var/lib/kube-proxy"
+# The directory to store the K8s binaries
+k8s_bin_dir: "/opt/bin"
+# The directory from services(k8s*.service) of systemd.
+k8s_systemd_dir: "/etc/systemd/system"
+# Directory of support files for system provisioning.
+k8s_support_files_dir: "/support-files/kubernetes-v{{k8s_version}}"
+# K8s worker binaries to download
+k8s_worker_binaries:
+  - kube-proxy
+  - kubelet
+  - kubectl
+
+# CNI network plugin settings
+k8s_cni_dir: "/opt/cni"
+k8s_cni_bin_dir: "{{k8s_cni_dir}}/bin"
+k8s_cni_conf_dir: "/etc/cni/net.d"
+k8s_cni_plugin_version: "0.7.1"
+k8s_cni_support_files_dir: "/support-files/cni-plugins-v{{k8s_cni_plugin_version}}"
+
+# The interface on which the K8s services should listen on. As all cluster
+# communication should use the PeerVPN interface the interface name is
+# normally "tap0" or "peervpn0".
+k8s_master_interface: "enp0s8"
+k8s_worker_interface: "enp0s8"
+
+# Name of the inventory host group.
+k8s_master_group_name: "cluster_master"
+k8s_worker_group_name: "cluster_worker"
+
+# The apiserver certificates needed for the control plane componentes 
+# to be able to connect to the apiserver cluster.
+# Client/Server TLS trusted CA key file/peer server TLS trusted CA file
+k8s_apiserver_ca_pem_file: "ca-k8s-apiserver.pem"
+
+# Peer server TLS cert and key file
+k8s_apiserver_cert_pem_file: "cert-k8s-apiserver.pem"
+k8s_apiserver_cert_key_pem_file: "cert-k8s-apiserver-key.pem"
+
+k8s_kubeproxy_cert_pem_file: "cert-k8s-proxy.pem"
+k8s_kubeproxy_cert_key_pem_file: "cert-k8s-proxy-key.pem"
+
+k8s_kubelet_cert_pem_file: "cert-k8s-kubelet-{{hostvars[inventory_hostname]['ansible_hostname']}}.pem"
+k8s_kubelet_cert_key_pem_file: "cert-k8s-kubelet-{{hostvars[inventory_hostname]['ansible_hostname']}}-key.pem"
+
+# kubelet settings
+k8s_kubelet_settings:
+  "address": "{{hostvars[inventory_hostname]['ansible_' + k8s_worker_interface].ipv4.address}}"
+  "node-ip": "{{hostvars[inventory_hostname]['ansible_' + k8s_worker_interface].ipv4.address}}"
+  "allow-privileged": "true"
+  "cluster-domain": "cluster.local"
+  "cluster-dns": "10.32.0.254"
+  "container-runtime": "docker"
+  "docker": "unix:///var/run/docker.sock"
+  "enable-custom-metrics": "true"
+  "image-pull-progress-deadline": "2m"
+  "kubeconfig": "{{k8s_kubelet_conf_dir}}/kubeconfig"
+  "register-node": "true"
+  "runtime-request-timeout": "10m"
+  "tls-cert-file": "{{k8s_conf_dir}}/{{k8s_apiserver_cert_file}}"
+  "tls-private-key-file": "{{k8s_conf_dir}}/{{k8s_apiserver_cert_key_file}}"
+  "serialize-image-pulls": "false"
+  "cadvisor-port": "4194" # port or "0" to disable
+  "healthz-bind-address": "{{hostvars[inventory_hostname]['ansible_' + k8s_worker_interface].ipv4.address}}"
+  "healthz-port": "10248"
+  "cloud-provider": ""
+  "fail-swap-on": "false"
+  "network-plugin": "cni"
+  "cni-conf-dir": "{{k8s_cni_conf_dir}}"
+  "cni-bin-dir": "{{k8s_cni_bin_dir}}"
+
+# kube-proxy settings
+k8s_kubeproxy_settings:
+  "bind-address": "{{hostvars[inventory_hostname]['ansible_' + k8s_worker_interface].ipv4.address}}"
+  "healthz-bind-address": "{{hostvars[inventory_hostname]['ansible_' + k8s_worker_interface].ipv4.address}}"
+  "proxy-mode": "iptables"
+  "cluster-cidr": "10.200.0.0/16"
+  "masquerade-all": "true"
+  "kubeconfig": "{{k8s_kubeproxy_conf_dir}}/kubeconfig"

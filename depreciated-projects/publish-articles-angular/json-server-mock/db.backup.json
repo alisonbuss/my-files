@@ -1,0 +1,37 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "firstName": "Admin",
+            "lastName": "System",
+            "sex": "",
+            "email": "admin@email.com",
+            "password": "admin",
+            "token": "yLbIdK8jlqm8tehUc9bEVYCzRcgE98OHln..."
+        },
+        {
+            "id": 2,
+            "firstName": "Lux",
+            "lastName": "Ferre",
+            "sex": "male",
+            "email": "lux@thehell.com",
+            "password": "lux666",
+            "token": "yLUc9gE98ObIbEnVYCzRdK8jlqm8tehHlc..."
+        },
+        {
+            "id": 3,
+            "firstName": "Athēná",
+            "lastName": "Goddess",
+            "sex": "female",
+            "email": "athena@clubgods.com",
+            "password": "athena123",
+            "token": "yLbIYCzRdK8jlqm8tehUbYCzREOHlnVc9c..."
+        }
+    ],
+    "authors": [
+
+    ],
+    "articles": [
+
+    ]
+}

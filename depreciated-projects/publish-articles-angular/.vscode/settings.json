@@ -1,0 +1,27 @@
+{
+        "editor.tabSize": 4,
+        "files.exclude": {
+                "**/.git": true,
+                "**/.svn": true,
+                "**/.hg": true,
+                "**/CVS": true,
+                "**/.DS_Store": true,
+
+                "**/e2e": true,
+                "**/node_modules": false,
+                "**/src/app/**/*.spec.ts": false,
+                "**/src/browserslist": true,
+                "**/src/karma.conf.js": true,
+                "**/src/main.ts": true,
+                "**/src/polyfills.ts": true,
+                "**/src/test.ts": true,
+                "**/src/tsconfig.app.json": true,
+                "**/src/tsconfig.spec.json": true,
+                "**/src/tslint.json": true,
+                "**.editorconfig": true,
+                "**.gitignore": true,
+                "**package-lock.json": true,
+                "**tsconfig.json": true,
+                "**tslint.json": true
+        }
+}

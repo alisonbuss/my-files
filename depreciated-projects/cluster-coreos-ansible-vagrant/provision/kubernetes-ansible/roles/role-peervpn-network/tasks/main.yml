@@ -1,0 +1,83 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: It installes the Kubernetes Worker, including kubelet and kube-proxy.
+# @fonts: https://github.com/githubixx/ansible-role-peervpn
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-3/
+#         https://peervpn.net/
+#-------------------------------------------------------------#
+
+- name: "Register whether the support folder contains the PeerVPN"
+  shell: "ls {{ peervpn_support_files_dir }}/"
+  register: exists_peervpn_support_files
+  ignore_errors: true
+
+- name: "Output: The support file or directory PeerVPN exist?"
+  debug:
+    msg: "RESULT: {% if exists_peervpn_support_files.rc == 0 %}Contains the PeerVPN support directory [{{ exists_peervpn_support_files.stdout }}]{% else %}It does not contain the PeerVPN support directory.{% endif %}"
+
+- name: "Create directory of support files for PeerVPN"
+  file:
+    path: "{{ peervpn_support_files_dir }}"
+    state: directory
+    mode: 0755
+  when: exists_peervpn_support_files is failed
+
+- name: "Download statically linked Linux binary"
+  get_url:
+    url: https://peervpn.net/files/peervpn-{{peervpn_version}}-linux-x86.tar.gz
+    dest: "{{ peervpn_support_files_dir }}/peervpn.tar.gz"
+    validate_certs: no
+    mode: 0755
+  when: exists_peervpn_support_files is failed
+
+- name: "Unzip downloaded PeerVPN (support files)"
+  unarchive:
+    src: "{{ peervpn_support_files_dir }}/peervpn.tar.gz"
+    dest: "/tmp"
+    mode: 0755
+    remote_src: yes
+    creates: "{{ peervpn_bin_dir }}/peervpn"
+
+- name: Copy binary to destination directory
+  copy:
+    src: "/tmp/peervpn-{{peervpn_version}}/peervpn"
+    dest: "{{ peervpn_bin_dir }}/peervpn"
+    mode: 0755
+    owner: root
+    group: root
+    remote_src: yes
+
+- name: Copy PeerVPN systemd service file
+  template:
+    src: "peervpn.service.j2"
+    dest: "/etc/systemd/system/peervpn.service"
+    mode: 0644
+    owner: root
+    group: root
+    
+- name: Create PeerVPN configuration directory
+  file:
+    path: /etc/peervpn
+    mode: 0700
+    owner: root
+    group: root
+    state: directory
+
+- name: "Output: IPv4 address and the prefix length that should be assigned to the TAP device"
+  debug:
+    msg: "RESULT: {{ peervpn_conf_ifconfig4 }}"
+
+- name: Copy PeerVPN configuration file
+  template:
+    src: "peervpn.conf.j2"
+    dest: /etc/peervpn/peervpn.conf
+    mode: 0600
+    owner: root
+    group: root
+  notify: Restart PeerVPN
+
+- name: Enable and start PeerVPN
+  service:
+    name: peervpn
+    enabled: yes
+    state: started

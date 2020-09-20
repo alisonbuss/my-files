@@ -1,0 +1,57 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Create an authenticated administrator "user/client" to access a Kubernetes API Server.
+# @fonts: https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubectlconfig/kubectlconfig.yml
+#-------------------------------------------------------------#
+
+- name: "Get IP address of first host in (cluster-master) group and use as API server"
+  set_fact:
+    var_ipv4_address_first_master: |
+      {% set item = groups[k8s_configs_master_group_name][0] %}
+      {{ hostvars[item]['ansible_' + k8s_configs_master_interface].ipv4.address }}
+
+- name: "Remove newline from API server IP address"
+  set_fact:
+    var_ipv4_address_first_master: "{{var_ipv4_address_first_master | replace('\n', '')}}"
+
+- name: "Output of hostnames/IPs of first host in (cluster-master) group"
+  debug: var=var_ipv4_address_first_master
+
+- name: "kubectl config set-cluster"
+  shell: |
+      kubectl config set-cluster {{k8s_configs_cluster_name}} \
+              --certificate-authority={{k8s_ca_source_directory}}/{{k8s_configs_apiserver_ca_pem_file}} \
+              --embed-certs=true \
+              --server=https://{{var_ipv4_address_first_master}}:6443
+  register: set_cluster
+
+- debug:
+    msg: "COMMAND:{{set_cluster.cmd}} | OUTPUT: {{set_cluster.stdout}}"
+
+- name: "kubectl config set-credentials admin"
+  shell: |
+      kubectl config set-credentials admin \
+              --client-certificate={{k8s_ca_source_directory}}/{{k8s_configs_kubectl_cert_pem_file}} \
+              --client-key={{k8s_ca_source_directory}}/{{k8s_configs_kubectl_cert_key_pem_file}}
+  register: set_credentials
+
+- debug:
+    msg: "COMMAND:{{set_credentials.cmd}} | OUTPUT: {{set_credentials.stdout}}"
+
+- name: "kubectl config set-context"
+  shell: |
+      kubectl config set-context {{k8s_configs_cluster_name}} \
+              --cluster={{k8s_configs_cluster_name}} \
+              --user=admin
+  register: set_context
+
+- debug:
+    msg: "COMMAND:{{set_context.cmd}} | OUTPUT: {{set_context.stdout}}"
+
+- name: "kubectl config use-context"
+  shell: |
+      kubectl config use-context {{k8s_configs_cluster_name}}
+  register: use_context
+
+- debug:
+    msg: "COMMAND:{{use_context.cmd}} | OUTPUT: {{use_context.stdout}}"

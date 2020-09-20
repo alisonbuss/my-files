@@ -1,0 +1,66 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Install Kubernetic, The Kubernetes Desktop Client, Cluster management, simplified.
+# @fonts: https://kubernetic.com/
+#         https://docs.kubernetic.com/
+#         https://docs.kubernetic.com/docs/cluster_authentication.html
+#         https://leischner.inf.h-brs.de/zim/3_Docker_&_Co/Kubernetic.html
+#-------------------------------------------------------------#
+
+- name: "Register kubernetic installation status"
+  become: false
+  shell: "which kubernetic"
+  register: kubernetic_installed
+  ignore_errors: true
+
+- name: "Output: kubernetic installation status"
+  debug:
+    msg: "RESULT: {% if kubernetic_installed.rc == 0 %}installed{% else %}not installed{% endif %}"
+
+- name: Download kubernetic-client archive
+  get_url:
+    url: "https://kubernetic.s3.amazonaws.com/Kubernetic-{{kubernetic_version}}.tar.gz"
+    dest: "{{ kubernetic_tmp_directory }}"
+    validate_certs: no
+  when: kubernetic_installed is failed
+
+- name: Unarchive kubernetic-client
+  unarchive:
+    src: "{{ kubernetic_tmp_directory }}/Kubernetic-{{kubernetic_version}}.tar.gz"
+    dest: "{{ kubernetic_tmp_directory }}"
+  when: kubernetic_installed is failed
+
+- name: Create directory for kubernetic source
+  file:
+    path: "{{ kubernetic_source_directory }}"
+    state: directory
+  when: kubernetic_installed is failed
+
+- name: Copy kubernetic source to destination directory
+  copy:
+    src: "{{ kubernetic_tmp_directory }}/Kubernetic-{{kubernetic_version}}/"
+    dest: "{{ kubernetic_source_directory }}"
+    mode: 0755
+    owner: "{{ kubernetic_owner }}"
+    group: "{{ kubernetic_group }}"
+  when: kubernetic_installed is failed
+
+- name: Download kubernetic-client Icon Archive
+  get_url:
+    url: "https://kubernetic.com/favicon.ico"
+    dest: "{{ kubernetic_source_directory }}/kubernetic.ico"
+    validate_certs: no
+  when: kubernetic_installed is failed
+
+- name: "Linking binary kubernetic-client for (/usr/local/bin/kubernetic)"
+  file:
+    src: "{{ kubernetic_source_directory }}/kubernetic"
+    dest: "{{ kuberneti_bin_directory }}/kubernetic"
+    state: link
+  when: kubernetic_installed is failed
+
+- name: "Copy kubernetic.desktop file for (/usr/share/applications)"
+  template:
+    src: "./templates/kubernetic.desktop.j2"
+    dest: "/usr/share/applications/kubernetic.desktop"
+  when: kubernetic_installed is failed

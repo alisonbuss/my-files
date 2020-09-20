@@ -1,0 +1,62 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Defining system update schedule
+# @fonts: https://coreos.com/os/docs/latest/update-strategies.html
+#         https://en-wiki.ikoula.com/en/Update_CoreOS_manually
+#         https://pt-wiki.ikoula.com/pt/Atualizar_CoreOS_manualmente
+#         https://github.com/coreos/container-linux-update-operator
+#         https://rook.io/docs/rook/v0.8/container-linux.html
+#         https://coreos.com/etcd/docs/latest/tls-etcd-clients.html#configure-locksmith-to-use-secure-etcd-connection
+#         https://github.com/coreos/locksmith
+#         https://coreos.com/os/docs/latest/switching-channels.html
+#-------------------------------------------------------------#
+
+# ISSUE NOTICE:
+- name: "SUB TASK : [ apply-update-schedule.yml ]"
+  debug:
+    msg: "START: Defining system update schedule..."
+
+- name: "Copy system update configuration file (update.conf)"
+  copy:
+    src: "../files/dist-coreos/update.conf"
+    dest: "/etc/coreos/update.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Overwrite system update configuration file (update.conf)"
+  copy:
+    dest: "/etc/coreos/update.conf"
+    content: "{{ system_coreos_locksmith_conf }}"
+    force: true
+  when: (system_coreos_locksmith_conf != "")
+
+- name: "Copy service (update-engine.service)"
+  copy:
+    src: "../files/dist-coreos/update-engine.service"
+    dest: "{{system_systemd_dir}}/update-engine.service"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Copy service (locksmithd.service)"
+  copy:
+    src: "../files/dist-coreos/locksmithd.service"
+    dest: "{{system_systemd_dir}}/locksmithd.service"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Enable and restart service (update-engine)"
+  systemd:
+    daemon_reload: yes
+    name: update-engine
+    state: restarted
+    no_block: no
+
+- name: "Enable and restart service (locksmithd)"
+  systemd:
+    daemon_reload: yes
+    name: locksmithd
+    state: restarted
+    no_block: no

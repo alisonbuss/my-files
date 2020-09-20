@@ -1,0 +1,28 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Generates certificate authority and certificates needed for Kubernetes
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-ca
+#         https://coreos.com/os/docs/latest/generate-self-signed-certificates.html
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-4/
+#-------------------------------------------------------------#
+
+- name: "Create directory for CA and certificate files"
+  file:
+    path: "{{k8s_ca_source_directory}}"
+    state: directory
+
+# Generate certificate for Kube-ApiServer.
+- import_tasks: generate-ca-kube-apiserver.yml
+  when: (true)
+
+# Generate certificate for Kube-Proxy.
+- import_tasks: generate-ca-kube-proxy.yml
+  when: (true)
+
+# Generate certificate for Kubelet-Workers.
+- import_tasks: generate-ca-kubelet-workers.yml
+  when: (true)
+
+# Generate certificate for Kubectl.
+- import_tasks: generate-ca-kubectl.yml
+  when: (true)

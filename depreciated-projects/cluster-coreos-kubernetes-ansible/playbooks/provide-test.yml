@@ -1,0 +1,32 @@
+
+
+- name: "GGFDGDSGDSGDSGDSGDSGSGDSGGDSGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+  hosts: "cluster_k8s_all"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_deploy }}"
+  vars:
+    system_current: "{{ global_system }}"
+
+    var_current_host_index: "{{ ansible_play_batch.index(inventory_hostname) | int + 1 }}"
+    
+    var_ipv4_address_first_master: "{{ hostvars[groups[global_host_group.master]|first]['ansible_host'] }}"
+
+  pre_tasks:
+    - name: "Update Gather Facts..."
+      become: false
+      action: setup
+
+    - name: "Output: Current incremental host value"
+      debug:
+        msg: "RESULT: {{ var_current_host_index }}"
+    
+    - name: "Output: IP address of the first master host"
+      debug:
+        msg: "RESULT: {{ var_ipv4_address_first_master }}"
+  post_tasks:
+    - name: "Update Gather Facts..."
+      become: false
+      action: setup

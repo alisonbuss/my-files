@@ -1,0 +1,35 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Apply system update
+# @fonts: https://coreos.com/os/docs/latest/update-strategies.html
+#         https://en-wiki.ikoula.com/en/Update_CoreOS_manually
+#         https://pt-wiki.ikoula.com/pt/Atualizar_CoreOS_manualmente
+#         https://github.com/coreos/container-linux-update-operator
+#-------------------------------------------------------------#
+
+# ISSUE NOTICE:
+- name: "SUB TASK : [ apply-update.yml ]"
+  debug:
+    msg: "START: Apply system update..."
+
+- name: "Run System Update Command."
+  shell: |
+    echo "Run system update command in the background...";
+    echo "It may take some time...";
+    (update_engine_client -update;) &
+  register: var_output_cmd_bash_update
+  ignore_errors: true
+
+- name: "Output: Final command to be executed in the bash..."
+  debug:
+    var=var_output_cmd_bash_update
+
+- name: "Success: When running the system update command"
+  debug:
+    msg: "WARNING: {{ var_output_cmd_bash_update.stdout | replace('\n', ' ') }}"
+  when: var_output_cmd_bash_update is success
+
+- name: "Failed: When running the system update command"
+  debug:
+    msg: "WARNING: {{ var_output_cmd_bash_update.stdout | replace('\n', ' ') }}"
+  when: var_output_cmd_bash_update is failed

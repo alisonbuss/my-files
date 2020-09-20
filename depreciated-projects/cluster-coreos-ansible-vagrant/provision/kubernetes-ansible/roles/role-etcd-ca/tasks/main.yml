@@ -1,0 +1,64 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Generates certificate authority and certificates needed for Etcd
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-ca
+#         https://coreos.com/os/docs/latest/generate-self-signed-certificates.html
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-4/
+#-------------------------------------------------------------#
+
+- name: "Create directory for CA and certificate files (etcd)"
+  file:
+    path: "{{etcd_ca_source_directory}}"
+    state: directory
+
+- name: "Generate list of IP addresses and hostnames needed for etcd certificate"
+  set_fact:
+    var_tmp_etcd_hosts: |
+      {% set comma = joiner(",") %}
+      {% for host in groups[etcd_ca_group_name] -%}
+        {{ comma() }}{{ hostvars[host]["ansible_hostname"] }}
+        {{ comma() }}{{ hostvars[host]['ansible_' + etcd_ca_interface].ipv4.address }}
+      {%- endfor %}
+      {% for item in etcd_ca_cert_hosts -%}
+        {{ comma() }}{{ item }}
+      {%- endfor %}
+
+- name: "Remove newline from etcd hosts list"
+  set_fact:
+    var_etcd_hosts: "{{ var_tmp_etcd_hosts | replace('\n', '') | replace(' ', '') }}"
+
+- name: "Output of hostnames/IPs used for etcd certificate"
+  debug: var=var_etcd_hosts
+
+- name: "Create etcd CA configuration file"
+  template:
+    src: "ca-etcd-config.json.j2"
+    dest: "{{etcd_ca_source_directory}}/ca-etcd-config.json"
+
+- name: C"opy the etcd CA certificate request file (CSR)"
+  template:
+    src: "ca-etcd-csr.json.j2"
+    dest: "{{etcd_ca_source_directory}}/ca-etcd-csr.json"
+
+- name: "Generate the etcd CA and private key"
+  shell: "cfssl gencert -initca ca-etcd-csr.json | cfssljson -bare ca-etcd"
+  args:
+    chdir: "{{etcd_ca_source_directory}}"
+    creates: "{{etcd_ca_source_directory}}/ca-etcd-key.pem"
+
+- name: "Create the etcd key CSR file"
+  template:
+    src: "ca-etcd-cert-csr.json.j2"
+    dest: "{{etcd_ca_source_directory}}/ca-etcd-cert-csr.json"
+
+- name: "Generate TLS certificate for etcd"
+  shell: |
+      cfssl gencert \
+            -ca=ca-etcd.pem \
+            -ca-key=ca-etcd-key.pem \
+            -config=ca-etcd-config.json \
+            -hostname={{var_etcd_hosts}} \
+            -profile=etcd ca-etcd-cert-csr.json | cfssljson -bare ca-etcd-cert
+  args:
+    chdir: "{{etcd_ca_source_directory}}"
+    creates: "{{etcd_ca_source_directory}}/ca-etcd-cert-key.pem"

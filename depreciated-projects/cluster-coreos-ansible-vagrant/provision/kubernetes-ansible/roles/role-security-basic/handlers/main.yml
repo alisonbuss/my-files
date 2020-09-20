@@ -1,0 +1,11 @@
+---
+
+- name: restart sshd
+  service:
+    name: sshd
+    state: restarted
+
+- name: restart sysctl
+  service:
+    name: systemd-sysctl
+    state: restarted

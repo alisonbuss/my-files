@@ -1,0 +1,98 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Copy files from ip6tables services, into the directory(/etc/systemd/system/*)"
+  copy:
+    src: "./files/{{item}}"
+    dest: "/etc/systemd/system/{{item}}"
+    mode: 0644
+    owner: root
+    group: root
+  with_items:
+    - "{{ security_ip6tables_service_files | list  }}"
+  when: (security_ip6tables_enable == true) and (security_ip6tables_service_files | list | length > 0)
+
+- name: "Enable and start service (ip6tables, ip6tables-store, ip6tables-restore)"
+  systemd:
+    daemon_reload: yes
+    name: "{{item}}"
+    enabled: yes
+    state: started
+    no_block: yes
+  with_items:
+    - "{{ security_ip6tables_service_files | list  }}"
+  when: (security_ip6tables_enable == true) and (security_ip6tables_service_files | list | length > 0)
+
+- name: "Copy ip6table rules files"
+  vars:
+    var_file: "{{ security_ip6tables_rules_file }}"
+    var_dest: "{{ security_ip6tables_rules_dest }}"
+  copy:
+    src: "{{ var_file }}"
+    dest: "{{ var_dest }}"
+    force: true
+    mode: 0644
+    owner: root
+    group: root
+  when: (security_ip6tables_enable == true)
+
+- name: "Creating ip6tables rules file (it will overwrite the 'rules-save' file, if it exists)"
+  copy:
+    content: "{{ security_ip6tables_rules_overwrite }}"
+    dest: "{{ security_ip6tables_rules_dest }}"
+    backup: true
+    force: true
+    mode: 0644
+    owner: root
+    group: root
+  when: (security_ip6tables_enable == true) and (security_ip6tables_rules_overwrite != "no")
+
+- name: "Restart ip6tables-restore"
+  service:
+    name: ip6tables-restore
+    state: restarted
+  when: (security_ip6tables_enable == true)
+
+- name: "Create ip6tables logging directory"
+  file:
+    path: "{{ security_ip6tables_log_folder }}"
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+  when: (security_ip6tables_enable == true) and (security_ip6tables_log_enable == true)
+
+- name: "Define shell command to generate the log file"
+  set_fact:
+    COMMAND_BIN_BASH: "-c '/usr/bin/journalctl -o short -f | grep {{ security_ip6tables_log_prefix }} > {{ security_ip6tables_log_folder }}/{{ security_ip6tables_log_file }}'"
+  when: (security_ip6tables_enable == true) and (security_ip6tables_log_enable == true)
+
+- name: "Output: Final command to be executed in the ip6tableslog-output-local.service"
+  debug:
+    msg: "ExecStart=/usr/bin/bash {{ COMMAND_BIN_BASH }}"
+  when: (security_ip6tables_enable == true) and (security_ip6tables_log_enable == true)
+
+# BEFORE - ExecStart=/usr/bin/bash -c '/usr/bin/journalctl -o short -f | grep IPTABLE-IPV6 > /var/log/iptables/ip6tables.log'
+# AFTER  - ExecStart=/usr/bin/bash {{ var_command_bin_bash }}
+- name: "Create systemd unit file for ip6tableslog-output-local"
+  vars:
+    var_command_bin_bash: "{{ COMMAND_BIN_BASH }}"
+  template:
+    src: "./templates/iptableslog-output-local.service.j2"
+    dest: "/etc/systemd/system/ip6tableslog-output-local.service"
+    mode: 0644
+    owner: root
+    group: root
+  when: (security_ip6tables_enable == true) and (security_ip6tables_log_enable == true)
+
+- name: "Enable and start service (ip6tableslog-output-local)"
+  systemd:
+    daemon_reload: yes
+    name: ip6tableslog-output-local
+    enabled: yes
+    state: started
+    no_block: no
+  when: (security_ip6tables_enable == true) and (security_ip6tables_log_enable == true)

@@ -1,0 +1,52 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# 1ª) Step:
+- name: "Install CFSSL PKI toolkit for generates certificate authority TLS"
+  hosts: localhost
+  become: true
+  become_user: root
+  vars_files:
+    - "../../library/variables/global/vars-global.yml"
+    - "../../library/variables/private/vars-local-host-password.yml"
+  roles:
+    - role: install-cfssl
+      tags: role-install-cfssl
+      when: true
+
+# 2ª) Step:
+# - name: "Generates certificate authority for (Etcd)"
+#   hosts: localhost
+#   vars_files:
+#     - ./library/variables/global/vars-global.yml
+#   roles:
+#     - role: generate-ca-etcd
+#       tags: role-generate-ca-etcd
+#       when: true
+
+# # 3ª) Step:
+# - name: "Provisioning a cluster Etcd"
+#   hosts: cluster_etcd
+#   become: true
+#   become_user: root
+#   vars_files:
+#     - ./library/variables/global/vars-global.yml
+#   roles:
+#     - role: config-security
+#       tags: role-config-security
+#       when: true
+
+#     - role: config-peervpn
+#       tags: role-config-peervpn
+#       when: true
+
+#     - role: config-storage-unit
+#       tags: role-config-storage-unit
+#       when: true
+
+#     - role: config-etcd
+#       tags: role-config-etcd
+#       when: true

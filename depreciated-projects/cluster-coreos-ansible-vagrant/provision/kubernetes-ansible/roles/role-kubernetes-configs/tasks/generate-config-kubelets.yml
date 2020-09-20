@@ -1,0 +1,61 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Generate Kubernetes configuration files for authentication 
+#         Kubelets(Workers) Client on a Kubernetes API Server.
+# @fonts: https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kubelets.yml
+#-------------------------------------------------------------#
+
+- name: Get IP address of first host in (cluster-k8s-master) group and use as API server
+  set_fact:
+    apiServer: |
+      {% set item = groups["cluster_k8s_master"][0] %}
+      {{ hostvars[item]['ansible_' + k8s_config_master_interface].ipv4.address }}
+
+- name: Remove newline from API server IP address
+  set_fact:
+    apiServer: "{{ apiServer | replace('\n', '') }}"
+
+- name: Output of hostnames/IPs of first host in (cluster-k8s-master) group
+  debug: var=apiServer
+
+- name: Generate a kubeconfig file for each worker node (set-cluster)
+  shell: |
+      kubectl config set-cluster {{k8s_config_cluster_name}} \
+              --certificate-authority={{k8s_certs_source_directory}}/kube-apiserver-ca.pem \
+              --embed-certs=true \
+              --server=https://{{apiServer}}:6443 \
+              --kubeconfig={{k8s_configs_source_directory}}/kubelet-{{hostname_worker_host}}.kubeconfig
+  with_inventory_hostnames:
+    - cluster_k8s_worker
+  vars:
+    - hostname_worker_host: "{{ hostvars[item]['ansible_hostname'] }}"
+
+- name: Generate a kubeconfig file for each worker node (set-credentials)
+  shell: |
+      kubectl config set-credentials system:node:{{hostname_worker_host}} \
+              --client-certificate={{k8s_certs_source_directory}}/kubelet-{{hostname_worker_host}}-cert.pem \
+              --client-key={{k8s_certs_source_directory}}/kubelet-{{hostname_worker_host}}-cert-key.pem \
+              --embed-certs=true \
+              --kubeconfig={{k8s_configs_source_directory}}/kubelet-{{hostname_worker_host}}.kubeconfig
+  with_inventory_hostnames:
+    - cluster_k8s_worker
+  vars:
+    - hostname_worker_host: "{{ hostvars[item]['ansible_hostname'] }}"
+
+- name: Generate a kubeconfig file for each worker node (set-context)
+  shell: |
+      kubectl config set-context default \
+              --cluster={{k8s_config_cluster_name}} \
+              --user=system:node:{{hostname_worker_host}} \
+              --kubeconfig={{k8s_configs_source_directory}}/kubelet-{{hostname_worker_host}}.kubeconfig
+  with_inventory_hostnames:
+    - cluster_k8s_worker
+  vars:
+    - hostname_worker_host: "{{ hostvars[item]['ansible_hostname'] }}"
+
+- name: Set use-context
+  shell: "kubectl config use-context default --kubeconfig={{k8s_configs_source_directory}}/kubelet-{{hostname_worker_host}}.kubeconfig"
+  with_inventory_hostnames:
+    - cluster_k8s_worker
+  vars:
+    - hostname_worker_host: "{{ hostvars[item]['ansible_hostname'] }}"

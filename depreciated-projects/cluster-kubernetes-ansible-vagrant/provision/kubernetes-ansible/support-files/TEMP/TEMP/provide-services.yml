@@ -1,0 +1,51 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: https://docs.ansible.com/ansible/2.4/import_tasks_module.html#examples
+#-------------------------------------------------------------#
+
+- name: "Publish support services on Kubernetes".
+  #hosts: ???
+  #become: true
+  #become_user: root
+
+  vars:
+    publish_graylog: false
+    publish_netdata: false
+    publish_prometheus: false
+    publish_grafana: false
+    publish_konga: false
+    publish_jenkins: false
+    publish_rocket_chat: false
+
+  vars_files:
+    - ./library/variables/vars-global.yml
+
+  tasks:
+    # Publish the Graylog service on Kubernetes.
+    - import_tasks: ./library/tasks/publish-service-graylog.yml
+      when: (publish_graylog == true)
+
+    # Publish the Netdata service on Kubernetes. 
+    - import_tasks: ./library/tasks/publish-service-netdata.yml
+      when: (publish_netdata == true)
+
+    # Publish the Prometheus service on Kubernetes.
+    - import_tasks: ./library/tasks/publish-service-prometheus.yml
+      when: (publish_prometheus == true)
+
+    # Publish the Grafana service on Kubernetes.
+    - import_tasks: ./library/tasks/publish-service-grafana.yml
+      when: (publish_grafana == true)
+
+    # Publish the Konga service on Kubernetes.
+    - import_tasks: ./library/tasks/publish-service-konga.yml
+      when: (publish_konga == true)
+
+    # Publish the Jenkins service on Kubernetes.
+    - import_tasks: ./library/tasks/publish-service-jenkins.yml
+      when: (publish_jenkins == true)
+
+    # Publish the Rocket.Chat service on Kubernetes.
+    - import_tasks: ./library/tasks/publish-service-rocket-chat.yml
+      when: (publish_rocket_chat == true)

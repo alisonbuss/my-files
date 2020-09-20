@@ -1,0 +1,90 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the (Certificate Kubernetes) rule.
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-ca
+#         https://coreos.com/os/docs/latest/generate-self-signed-certificates.html
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-4/
+#-------------------------------------------------------------#
+
+# The directory from where to copy the K8s certificates
+k8s_ca_source_directory: "{{ '~/k8s/certs/kubernetes' | expanduser }}"
+
+# Name of the inventory host group.
+k8s_ca_master_group_name: "cluster_k8s_master"
+k8s_ca_worker_group_name: "cluster_k8s_worker"
+
+# The interface on which the K8s services should listen on.
+k8s_ca_master_interface: "enp0s8"
+k8s_ca_worker_interface: "enp0s8"
+
+# Variables from kube-apiserver ------------------------------
+
+# Set list(hostnames) to generate certificate from cluster(kube-apiserver)
+k8s_ca_apiserver_cert_hosts:
+  - localhost
+  - 0.0.0.0
+  - 127.0.0.1
+  - 10.0.2.15
+  - 10.32.0.1
+  - kubernetes
+  - kubernetes.default
+  - kubernetes.default.svc
+  - kubernetes.default.svc.cluster.local
+
+# Expiry for Kubernetes API server root certificates
+k8s_ca_apiserver_expiry: "87600h"
+
+# Certificate authority for Kubernetes API server
+k8s_ca_apiserver_csr_cn: "Kubernetes"
+k8s_ca_apiserver_csr_key_algo: "rsa"
+k8s_ca_apiserver_csr_key_size: "2048"
+k8s_ca_apiserver_csr_names_c: "DE"
+k8s_ca_apiserver_csr_names_l: "The_Internet"
+k8s_ca_apiserver_csr_names_o: "Kubernetes"
+k8s_ca_apiserver_csr_names_ou: "BY"
+k8s_ca_apiserver_csr_names_st: "Bayern"
+
+# CSR parameter for Kubernetes API server certificate
+k8s_ca_apiserver_cert_cn: "Kubernetes"
+k8s_ca_apiserver_cert_key_algo: "rsa"
+k8s_ca_apiserver_cert_key_size: "2048"
+k8s_ca_apiserver_cert_names_c: "DE"
+k8s_ca_apiserver_cert_names_l: "The_Internet"
+k8s_ca_apiserver_cert_names_o: "Kubernetes"
+k8s_ca_apiserver_cert_names_ou: "BY"
+k8s_ca_apiserver_cert_names_st: "Bayern"
+
+# Variables from kube-proxy -----------------------------------
+
+# CSR parameter for the kube-proxy client certificate
+k8s_ca_proxy_cert_cn: "system:kube-proxy" # DO NOT CHANGE!
+k8s_ca_proxy_cert_key_algo: "rsa"
+k8s_ca_proxy_cert_key_size: "2048"
+k8s_ca_proxy_cert_names_c: "DE"
+k8s_ca_proxy_cert_names_l: "The_Internet"
+k8s_ca_proxy_cert_names_o: "system:node-proxier" # DO NOT CHANGE!
+k8s_ca_proxy_cert_names_ou: "BY"
+k8s_ca_proxy_cert_names_st: "Bayern"
+
+# Variables from kubelet-workers ------------------------------
+
+# CSR parameter for kubelet client certificates
+k8s_ca_kubelet_cert_key_algo: "rsa"
+k8s_ca_kubelet_cert_key_size: "2048"
+k8s_ca_kubelet_cert_names_c: "DE"
+k8s_ca_kubelet_cert_names_l: "The_Internet"
+k8s_ca_kubelet_cert_names_o: "system:nodes" # DO NOT CHANGE!
+k8s_ca_kubelet_cert_names_ou: "BY"
+k8s_ca_kubelet_cert_names_st: "Bayern"
+
+# Variables from Kubectl --------------------------------------
+ 
+# CSR parameter for the admin user certificate
+k8s_ca_kubectl_cert_cn: "admin"
+k8s_ca_kubectl_cert_key_algo: "rsa"
+k8s_ca_kubectl_cert_key_size: "2048"
+k8s_ca_kubectl_cert_names_c: "DE"
+k8s_ca_kubectl_cert_names_l: "The_Internet"
+k8s_ca_kubectl_cert_names_o: "system:masters" # DO NOT CHANGE!
+k8s_ca_kubectl_cert_names_ou: "BY"
+k8s_ca_kubectl_cert_names_st: "Bayern"

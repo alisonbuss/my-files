@@ -1,0 +1,60 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Flannel rule.
+# @fonts: https://github.com/githubixx/ansible-role-flanneld
+#         https://coreos.com/flannel/docs/latest/flannel-config.html
+#-------------------------------------------------------------#
+
+# The directory from where to copy the Etcd certificates. 
+etcd_ca_source_directory: "{{ '~/k8s/certs/etcd' | expanduser }}"
+# The etcd certificates needed for the control plane components to be able
+# to connect to the etcd cluster.
+# Client/Server TLS trusted CA key file/peer server TLS trusted CA file
+etcd_ca_file: "etcd-ca.pem"
+# Peer server TLS cert file
+etcd_cert_file: "etcd-cert.pem"
+# Peer server TLS key file
+etcd_cert_key_file: "etcd-cert-key.pem"
+# Directory (Certificate authority and certificate files for etcd)
+etcd_certs_dir: "/etc/ssl/certs"
+# The port the control plane components should connect to etcd cluster
+etcd_client_port: "2379"
+# The interface the etcd cluster is listening on
+etcd_interface: "enp0s8"
+# Determine name of the inventory host group
+etcd_group_name: "cluster_etcd"
+
+# Variables for Flannel
+flannel_version: "0.10.0"
+flannel_etcd_prefix: "/kubernetes-cluster/network"
+flannel_ip_range: "10.200.0.0/16"
+flannel_backend_type: "vxlan"
+flannel_cni_name: "podnet"
+flannel_cni_conf_file: "10-flannel"
+
+# CNI network plugin settings
+flannel_cni_conf_dir: "/etc/cni/net.d"
+
+# The interface on which the K8s services should listen on. As all cluster
+# communication should use the PeerVPN interface the interface name is
+# normally "tap0" or "peervpn0".
+flannel_interface: "enp0s8"
+
+# The directory from custom service(flanneld.service) to up an flannel in a container in CoreOS.
+flannel_systemd_service_dir: "/etc/systemd/system/flanneld.service.d"
+flannel_systemd_custom_file: "20-custom-flanneld"
+flannel_systemd_network_config_file: "10-publish-network-config"
+
+flannel_settings:
+  "etcd-cafile": "{{etcd_certs_dir}}/{{etcd_ca_file}}"
+  "etcd-certfile": "{{etcd_certs_dir}}/{{etcd_cert_file}}"
+  "etcd-keyfile": "{{etcd_certs_dir}}/{{etcd_cert_key_file}}"
+  "etcd-prefix": "{{flannel_etcd_prefix}}"
+  "iface": "{{flannel_interface}}"
+  "public-ip": "{{hostvars[inventory_hostname]['ansible_' + flannel_interface].ipv4.address}}"
+  "subnet-file": "/run/flannel/subnet.env"
+  "ip-masq": "true"
+  "healthz-ip": "0.0.0.0"
+  "healthz-port": "0" # 0 = disable
+
+flannel_settings_merge: {}

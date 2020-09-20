@@ -1,0 +1,14 @@
+#jinja2: trim_blocks:False
+{%- macro etcd_hosts() -%}
+  {%- for host in groups[etcd_group_name] -%}
+    https://{{hostvars[host]['ansible_' + etcd_interface].ipv4.address}}:{{etcd_client_port}}{% if not loop.last %},{% endif %}
+  {%- endfor -%} 
+{%- endmacro -%}
+
+[Service]
+ExecStartPre=/usr/bin/etcdctl \
+    --endpoint="{{etcd_hosts()}}" \
+    --ca-file="{{etcd_certs_dir}}/{{etcd_ca_file}}" \
+    --cert-file="{{etcd_certs_dir}}/{{etcd_cert_file}}" \
+    --key-file="{{etcd_certs_dir}}/{{etcd_cert_key_file}}" \
+    set {{flannel_etcd_prefix}}/config '{"Network":"{{flannel_ip_range}}","Backend":{"Type":"{{flannel_backend_type}}"}}'

@@ -1,0 +1,75 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Configuration from service(etcd-member.service) to up an etcd3 in a container in CoreOS.
+# @fonts: https://github.com/githubixx/ansible-role-etcd
+#         https://coreos.com/etcd/docs/latest/op-guide/clustering.html
+#         https://coreos.com/etcd/docs/latest/getting-started-with-etcd.html
+#         https://coreos.com/etcd/docs/latest/tls-etcd-clients.html
+#         https://www.mirantis.com/blog/everything-you-ever-wanted-to-know-about-using-etcd-with-kubernetes-v1-6-but-were-afraid-to-ask/
+#-------------------------------------------------------------#
+
+- name: "Create directory from service(etcd-member.service)"
+  file:
+    path: "{{etcd_systemd_service_dir}}"
+    state: directory
+  when: true
+
+- name: "Combine etcd_settings and etcd_settings_merge (if defined)"
+  set_fact:
+    etcd_settings: "{{ etcd_settings | combine(etcd_settings_merge | default({})) }}"
+  when: true
+
+- name: "Copy certificates 'Certificate authority for etcd certificates'"
+  copy:
+    src: "{{etcd_ca_source_directory}}/{{item}}"
+    dest: "{{etcd_certs_dir}}/{{item}}"
+    mode: 0640
+    owner: etcd
+    group: etcd
+  with_items:
+    - "{{etcd_ca_file}}"
+    - "{{etcd_cert_file}}"
+    - "{{etcd_cert_key_file}}"
+  when: true
+
+- name: "Update Certificate authority for etcd certificates"
+  shell: "update-ca-certificates"
+
+- name: "Create systemd(etcd-member.service) unit file"
+  template:
+    src: "./templates/etcd-member.conf.j2"
+    dest: "{{etcd_systemd_service_dir}}/etcd-member.conf"
+    owner: root
+    group: root
+    mode: 0644
+  when: true
+
+- name: "Enable and start etcd-member"
+  systemd:
+    daemon_reload: yes
+    name: etcd-member
+    enabled: yes
+    state: started
+    no_block: yes
+  when: true
+
+- name: "Adding Environment Variable to ETCDCTL in (/etc/environment)"
+  blockinfile:
+    path: /etc/environment
+    owner: root
+    group: root
+    marker: "# {mark} ENVIRONMENT VARIABLE FOR THE ETCDCTL"
+    block: |
+      ETCDCTL_CA_FILE="{{etcd_certs_dir}}/{{etcd_ca_file}}"
+      ETCDCTL_CERT_FILE="{{etcd_certs_dir}}/{{etcd_cert_file}}"
+      ETCDCTL_KEY_FILE="{{etcd_certs_dir}}/{{etcd_cert_key_file}}"
+  when: true
+
+- name: "Source the (/etc/environment) file"
+  shell: "source /etc/environment"
+  when: true
+
+# ISSUE NOTICE:
+- name: "Configuration of the backup scheduler from Etcd to Ceph"
+  debug:
+    msg: "WARNING: Configuration not implemented!!!"

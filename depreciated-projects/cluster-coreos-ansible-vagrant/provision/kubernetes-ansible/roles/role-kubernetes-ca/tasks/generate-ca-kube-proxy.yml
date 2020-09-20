@@ -1,0 +1,21 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Create the kube-proxy key CSR file"
+  template:
+    src: "ca-kube-proxy-cert-csr.json.j2"
+    dest: "{{k8s_ca_source_directory}}/ca-kube-proxy-cert-csr.json"
+
+- name: "Generate TLS certificate for kube-proxy"
+  shell: | 
+    cfssl gencert \
+          -ca=ca-kube-apiserver.pem \
+          -ca-key=ca-kube-apiserver-key.pem \
+          -config=ca-kube-apiserver-config.json \
+          -profile=kubernetes ca-kube-proxy-cert-csr.json | cfssljson -bare ca-kube-proxy-cert
+  args:
+    chdir: "{{k8s_ca_source_directory}}"
+    creates: "{{k8s_ca_source_directory}}/ca-kube-proxy-cert-key.pem"

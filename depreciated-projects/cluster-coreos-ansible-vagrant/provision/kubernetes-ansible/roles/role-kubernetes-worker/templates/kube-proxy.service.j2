@@ -1,0 +1,16 @@
+#jinja2: trim_blocks:False
+[Unit]
+Description=Kubernetes Kube Proxy
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+ExecStart={{k8s_bin_dir}}/kube-proxy \
+{%- for setting in k8s_worker_kubeproxy_settings | sort %}
+  --{{setting}}={{k8s_worker_kubeproxy_settings[setting]}} {% if not loop.last %}\{% endif %}
+{%- endfor %}
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

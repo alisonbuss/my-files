@@ -1,0 +1,100 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# 1ª) Step:
+- name: "Generate certificate authority for (Etcd)"
+  hosts: "localhost"
+  become: false
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  roles:
+    - role: role-etcd-ca
+      vars:
+        etcd_ca_source_directory: "{{ global_source_directory.etcd_ca }}"
+        etcd_ca_group_name: "{{ global_host_group.etcd }}"
+        etcd_ca_interface: "{{ global_interface.etcd }}"
+      tags: etcd-ca
+  tags:
+    - kubernetes-etcd
+    - etcd-ca
+
+# 2ª) Step:
+- name: "Provide firewall security criteria through IpTables (All hosts Etcd)"
+  hosts: "cluster_etcd"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_deploy }}"
+  vars:
+    system_current: "{{ global_system }}"
+  roles:
+    - role: role-security-iptables
+      vars:
+        security_ip4tables_log_enable: true
+        security_ip4tables_rules_overwrite: |
+          *filter
+          :INPUT DROP [0:0]
+          :FORWARD DROP [0:0]
+          :OUTPUT ACCEPT [0:0]
+          # Accept all loopback (local) traffic:
+          -A INPUT -i lo -j ACCEPT
+          # Keep existing connections (like our SSH session) alive:
+          -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+          # Accept all TCP/IP traffic to SSH
+          -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+          # Accept pings:
+          -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+          # Enable Iptables LOG
+          -A INPUT   -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-INPUT----> " 
+          -A FORWARD -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-FORWARD--> " 
+          -A OUTPUT  -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-OUTPUT---> " 
+          COMMIT
+      tags: security-iptables
+  tags:
+    - kubernetes-etcd
+    - etcd-security
+
+# 3ª) Step:
+- name: "Provide a storage cluster Etcd(Key/Value)"
+  hosts: "cluster_etcd"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_deploy }}"
+  vars:
+    system_current: "{{ global_system }}"
+  roles:
+    - role: role-etcd
+      vars:
+        etcd_ca_source_directory: "{{ global_source_directory.etcd_ca }}"
+        etcd_group_name: "{{ global_host_group.etcd }}"
+        etcd_interface: "{{ global_interface.etcd }}"
+        etcd_version: "{{ global_version.etcd }}"
+      tags: etcd
+  tags:
+    - kubernetes-etcd
+    - etcd
+
+
+
+# # 4ª) Step:
+# - name: "Initiating the execution of the 'setup' ansible, (Gather Facts)"
+#   hosts: "cluster_k8s_all"
+#   become: false ## By default, keep false.
+#   gather_facts: false
+#   vars_files: 
+#     - "{{ global_vars_file.public }}"
+#     - "{{ global_vars_file.system }}"
+#     - "{{ global_vars_file.ssh_deploy }}"
+#   tasks:
+#     - action: setup
+#   tags:
+#     - kubernetes-all
+#     - gather-facts

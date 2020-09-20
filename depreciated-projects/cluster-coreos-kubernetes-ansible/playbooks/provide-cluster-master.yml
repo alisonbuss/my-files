@@ -1,0 +1,144 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# 1ª) Step:
+- name: "Generate certificate authority for Kubernetes(kube-apiserver, kube-proxy, kubelet-workers, kubectl)"
+  hosts: "localhost"
+  become: false
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  roles:
+    - role: role-kubernetes-ca
+      vars:
+        k8s_ca_source_directory: "{{ global_source_directory.k8s_ca }}"
+
+        k8s_ca_master_group_name: "{{ global_host_group.master }}"
+        k8s_ca_master_interface: "{{ global_interface.master }}"
+
+        k8s_ca_worker_group_name: "{{ global_host_group.worker }}"
+        k8s_ca_worker_interface: "{{ global_interface.worker }}"
+      tags: kubernetes-ca
+  tags:
+    - kubernetes-master
+    - kubernetes-ca
+
+# 2ª) Step:
+- name: "Generate Kubernetes Configuration Files(kubeconfigs) for Authentication"
+  hosts: "localhost"
+  become: false
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  roles:
+    - role: role-kubernetes-configs
+      vars:
+        k8s_configs_kubelets: true
+        k8s_configs_kube_proxy: true
+        k8s_configs_encryption: true
+
+        k8s_configs_cluster_name: "{{ global_k8s_configs_cluster_name }}"
+        k8s_configs_encryption_key: "{{ global_k8s_configs_encryption_key }}"
+        
+        k8s_ca_source_directory: "{{ global_source_directory.k8s_ca }}"
+        k8s_configs_source_directory: "{{ global_source_directory.k8s_configs }}}"
+
+        k8s_configs_master_group_name: "{{ global_host_group.master }}"
+        k8s_configs_master_interface: "{{ global_interface.master }}"
+
+        k8s_configs_worker_group_name: "{{ global_host_group.worker }}"
+        k8s_configs_worker_interface: "{{ global_interface.worker }}"
+      tags: kubernetes-configs
+  tags:
+    - kubernetes-master
+    - kubernetes-configs
+
+# 3ª) Step:
+- name: "Provide firewall security criteria through IpTables (All hosts Master)"
+  hosts: "cluster_master"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_deploy }}"
+  vars:
+    system_current: "{{ global_system }}"
+  roles:
+    - role: role-security-iptables
+      vars:
+        security_ip4tables_log_enable: true
+        security_ip4tables_rules_overwrite: |
+          *filter
+          :INPUT DROP [0:0]
+          :FORWARD DROP [0:0]
+          :OUTPUT ACCEPT [0:0]
+          # Accept all loopback (local) traffic:
+          -A INPUT -i lo -j ACCEPT
+          # Keep existing connections (like our SSH session) alive:
+          -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+          # Accept all TCP/IP traffic to SSH
+          -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+          # Accept pings:
+          -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+          # Enable Iptables LOG
+          -A INPUT   -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-INPUT----> " 
+          -A FORWARD -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-FORWARD--> " 
+          -A OUTPUT  -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-OUTPUT---> " 
+          COMMIT
+      tags: security-iptables
+  tags:
+    - kubernetes-master
+    - kubernetes-security
+
+# 4ª) Step:
+- name: "Providing service to the Master of Kubernetes(kube-apiserver, kube-scheduler, kube-controller-manager)"
+  hosts: "cluster_master"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_deploy }}"
+  vars:
+    system_current: "{{ global_system }}"
+  roles:
+    - role: role-kubernetes-master
+      vars:
+        etcd_ca_source_directory: "{{ global_source_directory.etcd_ca }}"
+        etcd_group_name: "{{ global_host_group.etcd }}"
+        etcd_interface: "{{ global_interface.etcd }}"
+
+        k8s_ca_source_directory: "{{ global_source_directory.k8s_ca }}"
+        k8s_configs_source_directory: "{{ global_source_directory.k8s_configs }}"
+
+        k8s_master_group_name: "{{ global_host_group.master }}"
+        k8s_master_interface: "{{ global_interface.master }}"
+
+        k8s_version: "{{ global_version.k8s }}"
+      tags: kubernetes-master-install
+  tags:
+    - kubernetes-master
+    - kubernetes-install
+
+# 5ª) Step:
+- name: "Client Kubectl: Create an authenticated administrator user to access a Kubernetes API Server"
+  hosts: "localhost"
+  become: false
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  roles:
+    - role: role-kubernetes-configs
+      vars:
+        k8s_configs_admin_kubectl: true
+        
+        k8s_ca_source_directory: "{{ global_source_directory.k8s_ca }}"
+        k8s_configs_cluster_name: "{{ global_k8s_configs_cluster_name }}"
+
+        k8s_configs_master_group_name: "{{ global_host_group.master }}"
+        k8s_configs_master_interface: "{{ global_interface.master }}"
+      tags: kubernetes-admin-kubectl
+  tags:
+    - kubernetes-master
+    - kubernetes-admin-kubectl

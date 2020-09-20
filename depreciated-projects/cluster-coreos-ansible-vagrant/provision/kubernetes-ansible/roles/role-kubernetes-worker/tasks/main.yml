@@ -1,0 +1,197 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: It installes the Kubernetes Worker, including kubelet and kube-proxy.
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-worker
+#-------------------------------------------------------------#
+
+- name: Create Kubernetes config directory
+  file:
+    path: "{{k8s_conf_dir}}"
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Ensure Kubelet config directory
+  file:
+    path: "{{k8s_worker_kubelet_conf_dir}}"
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Ensure Kubeproxy config directory
+  file:
+    path: "{{k8s_worker_kubeproxy_conf_dir}}"
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Ensure download directory CNI (used to store archives)
+  file:
+    path: "{{k8s_cni_download_dir}}"
+    state: directory
+    mode: 0750
+
+- name: Copy worker certificates
+  copy:
+    src: "{{k8s_certs_source_directory}}/{{item}}"
+    dest: "{{k8s_conf_dir}}/{{item}}"
+    mode: 0640
+    owner: root
+    group: root
+  with_items:
+    - "{{k8s_apiserver_ca_file}}"
+    - "{{k8s_apiserver_cert_file}}"
+    - "{{k8s_apiserver_cert_key_file}}"
+    - "{{k8s_kube_proxy_cert_file}}"
+    - "{{k8s_kube_proxy_cert_key_file}}"
+    - "{{k8s_kubelet_worker_cert_file}}"
+    - "{{k8s_kubelet_worker_cert_key_file}}"
+
+- name: Ensure CNI plugins directory
+  file:
+    path: "{{k8s_cni_dir}}"
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Ensure CNI bin directory
+  file:
+    path: "{{k8s_cni_bin_dir}}"
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: "Register whether the support folder contains the Kubernetes binaries"
+  shell: "ls /support-files/kubernetes-v{{k8s_version}}/"
+  register: exists_k8s_support_files
+  ignore_errors: true
+
+- name: "Output: The support file or directory Kubernetes exist?"
+  debug:
+    msg: "RESULT: {% if exists_k8s_support_files.rc == 0 %}Contains the Kubernetes support directory [{{ exists_k8s_support_files.stdout | replace('\n', ',') }}]{% else %}It does not contain the Kubernetes support directory.{% endif %}"
+
+- name: "Downloading official Kubernetes(Worker) binaries for (/opt/bin)"
+  get_url:
+    url: "https://storage.googleapis.com/kubernetes-release/release/v{{k8s_version}}/bin/linux/amd64/{{item}}"
+    dest: "{{k8s_bin_dir}}"
+    validate_certs: no
+    mode: 0755
+  with_items:
+    - "{{k8s_worker_binaries}}"
+  notify:
+    - restart kube-proxy
+    - restart kubelet
+  when: exists_k8s_support_files is failed
+
+- name: "Copy Kubernetes binaries into the directory(/support-files/...) for the Kubernetes execution(/opt/bin)"
+  copy:
+    src: "/support-files/kubernetes-v{{k8s_version}}/{{item}}"
+    dest: "{{k8s_bin_dir}}"
+    mode: 0755
+  with_items:
+    - "{{k8s_worker_binaries}}"
+  notify:
+    - restart kube-proxy
+    - restart kubelet
+  when: exists_k8s_support_files is success
+
+- name: "Register whether the support folder contains the CNI plugins"
+  shell: "ls /support-files/cni-plugins-v{{k8s_cni_plugin_version}}/"
+  register: exists_cni_support_files
+  ignore_errors: true
+
+- name: "Output: The support file or directory CNI exist?"
+  debug:
+    msg: "RESULT: {% if exists_cni_support_files.rc == 0 %}Contains the CNI support directory [{{exists_cni_support_files.stdout}}]{% else %}It does not contain the CNI support directory.{% endif %}"
+
+- name: Create CNI download directory
+  file:
+    path: "{{k8s_cni_download_dir}}"
+    state: directory
+  when: exists_cni_support_files is failed
+
+- name: "Download CNI plugins"
+  get_url:
+    url: https://github.com/containernetworking/plugins/releases/download/v{{k8s_cni_plugin_version}}/cni-plugins-amd64-v{{k8s_cni_plugin_version}}.tgz
+    dest: "{{k8s_cni_download_dir}}/cni-plugins.tgz"
+    validate_certs: no
+    mode: 0640
+  when: exists_cni_support_files is failed
+
+- name: "Unzip the CNI plugins (support files)"
+  unarchive:
+    src: "/support-files/cni-plugins-v{{k8s_cni_plugin_version}}/cni-plugins.tgz"
+    dest: "{{k8s_cni_bin_dir}}"
+    remote_src: yes
+    creates: "{{k8s_cni_dir}}/bin/bridge"
+
+- name: Create Kubelet kubeconfig
+  template:
+    src: "{{k8s_configs_source_directory}}/kubelet-{{hostvars[inventory_hostname]['ansible_hostname']}}.kubeconfig"
+    dest: "{{k8s_worker_kubelet_conf_dir}}/kubeconfig"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create Kubeproxy kubeconfig
+  template:
+    src: "{{k8s_configs_source_directory}}/kube-proxy.kubeconfig"
+    dest: "{{k8s_worker_kubeproxy_conf_dir}}/kubeconfig"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Combine k8s_worker_kubelet_settings and k8s_worker_kubelet_settings_user (if defined)
+  set_fact:
+    k8s_worker_kubelet_settings: "{{ k8s_worker_kubelet_settings | combine( k8s_worker_kubelet_settings_user | default({}) ) }}"
+
+- name: Create kubelet.service systemd file
+  template:
+    src: kubelet.service.j2
+    dest: /etc/systemd/system/kubelet.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - reload systemd
+    - restart kubelet
+
+- name: Enable Kubelet
+  service:
+    name: kubelet
+    enabled: yes
+    state: started
+
+- name: Ensure Kubeproxy config directory
+  file:
+    path: "{{k8s_worker_kubeproxy_conf_dir}}"
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Combine k8s_worker_kubeproxy_settings and k8s_worker_kubeproxy_settings_user (if defined)
+  set_fact:
+    k8s_worker_kubeproxy_settings: "{{ k8s_worker_kubeproxy_settings | combine( k8s_worker_kubeproxy_settings_user | default({}) ) }}"
+
+- name: Create kube-proxy.service systemd file
+  template:
+    src: kube-proxy.service.j2
+    dest: /etc/systemd/system/kube-proxy.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - reload systemd
+    - restart kube-proxy
+
+- name: Enable kube-proxy
+  service:
+    name: kube-proxy
+    enabled: yes
+    state: started

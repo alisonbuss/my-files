@@ -1,0 +1,28 @@
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:theme="@style/Theme.ThemeCustomToolbarBottom"
+
+    android:id="@+id/tb_bottom"
+    android:layout_alignParentBottom="true"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:minHeight="?attr/actionBarSize"
+    android:background="?attr/colorPrimary"
+    android:elevation="4dp">
+
+    <ImageView
+        android:id="@+id/iv_settings"
+        android:src="@drawable/logo"
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
+
+
+
+
+
+
+
+
+
+</android.support.v7.widget.Toolbar>
+

@@ -1,0 +1,18 @@
+{
+    "signing": {
+        "default": {
+            "expiry": "{{ etcd_ca_expiry }}"
+        },
+        "profiles": {
+            "etcd": {
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "server auth",
+                    "client auth"
+                ],
+                "expiry": "{{ etcd_ca_expiry }}"
+            }
+        }
+    }
+}

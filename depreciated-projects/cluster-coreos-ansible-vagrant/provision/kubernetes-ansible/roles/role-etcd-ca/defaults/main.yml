@@ -1,0 +1,49 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the (Certificate Etcd) rule.
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-ca
+#         https://coreos.com/os/docs/latest/generate-self-signed-certificates.html
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-4/
+#-------------------------------------------------------------#
+
+# The directory from where to copy the Etcd certificates
+etcd_ca_source_directory: "{{ '~/k8s/certs/etcd' | expanduser }}"
+
+# Name of the inventory host group.
+etcd_ca_group_name: "cluster_etcd"
+
+# The interface on which Etcd services should listen.
+etcd_ca_interface: "enp0s8"
+
+# Set list(hostnames) to generate certificate from cluster(Etcd)
+etcd_ca_cert_hosts:
+  - localhost
+  - 0.0.0.0
+  - 127.0.0.1
+  - 10.0.2.15
+  - 10.32.0.1
+  - etcd01-server
+  - etcd02-server
+
+# Expiry for etcd root certificate
+etcd_ca_expiry: "87600h"
+
+# Certificate authority for etcd certificates
+etcd_ca_csr_cn: "Etcd"
+etcd_ca_csr_key_algo: "rsa"
+etcd_ca_csr_key_size: "2048"
+etcd_ca_csr_names_c: "DE"
+etcd_ca_csr_names_l: "The_Internet"
+etcd_ca_csr_names_o: "Kubernetes"
+etcd_ca_csr_names_ou: "BY"
+etcd_ca_csr_names_st: "Bayern"
+
+# Certificate Signature Requests(CSR) parameter for etcd certificate
+etcd_ca_cert_cn: "Etcd"
+etcd_ca_cert_key_algo: "rsa"
+etcd_ca_cert_key_size: "2048"
+etcd_ca_cert_names_c: "DE"
+etcd_ca_cert_names_l: "The_Internet"
+etcd_ca_cert_names_o: "Kubernetes"
+etcd_ca_cert_names_ou: "BY"
+etcd_ca_cert_names_st: "Bayern"

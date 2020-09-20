@@ -1,0 +1,103 @@
+[
+    {
+        "cluster": "etcd-servers",
+        "description": "Etcd Servers, a storage cluster of (key/value) distributed",
+        "active": true,
+        "machines": [
+            {
+                "hostname": "etcd01",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 2,              
+                "memory": 768,
+                "ip_address_static": "192.168.33.101",
+                "interface": "enp0s8",
+                "active": true
+            },
+            {
+                "hostname": "etcd02",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 2,              
+                "memory": 768,
+                "ip_address_static": "192.168.33.102",
+                "interface": "enp0s8",
+                "active": true
+            },
+            {
+                "hostname": "etcd03",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 2,              
+                "memory": 768,
+                "ip_address_static": "192.168.33.103",
+                "interface": "enp0s8",
+                "active": false
+            }
+        ]
+    },
+    {
+        "cluster": "kubernetes-masters",
+        "description": "Kubernetes Master Servers, responsible for managing the hosts (masters and workers) and the general decisions of the cluster",
+        "active": true,
+        "machines": [
+            {
+                "hostname": "master01",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 2,              
+                "memory": 1024,
+                "ip_address_static": "192.168.66.101",
+                "interface": "enp0s8",
+                "active": true
+            },
+            {
+                "hostname": "master02",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 2,              
+                "memory": 1024,
+                "ip_address_static": "192.168.66.102",
+                "interface": "enp0s8",
+                "active": false
+            }
+        ]
+    },
+    {
+        "cluster": "kubernetes-workers",
+        "description": "Kubernetes Master Servers, responsible for managing the network between the containers and their availability",
+        "active": false,
+        "machines": [
+            {
+                "hostname": "worker01",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 1,              
+                "memory": 1024,
+                "ip_address_static": "192.168.99.101",
+                "interface": "enp0s8",
+                "active": true
+            },
+            {
+                "hostname": "worker02",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 1,              
+                "memory": 1024,
+                "ip_address_static": "192.168.99.102",
+                "interface": "enp0s8",
+                "active": true
+            },
+            {
+                "hostname": "worker03",
+                "domain": "virtual.com",
+                "box": "packer/coreos-vagrant-box",
+                "cpus": 1,              
+                "memory": 1024,
+                "ip_address_static": "192.168.99.103",
+                "interface": "enp0s8",
+                "active": false
+            }
+        ]
+    }
+]

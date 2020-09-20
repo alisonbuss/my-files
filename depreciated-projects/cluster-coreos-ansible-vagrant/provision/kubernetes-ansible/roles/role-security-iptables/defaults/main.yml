@@ -1,0 +1,69 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Security rule.
+# @fonts: https://github.com/githubixx/ansible-role-harden-linux
+#         https://www.linode.com/docs/security/firewalls/control-network-traffic-with-iptables/
+#         https://medium.com/@jasonrigden/hardening-ssh-1bcb99cd4cef
+#         https://www.digitalocean.com/community/tutorials/how-to-isolate-servers-within-a-private-network-using-iptables
+#         https://www.booleanworld.com/depth-guide-iptables-linux-firewall/
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-2/
+#         http://docs.ansible.com/ansible/latest/modules/user_module.html
+#         http://docs.ansible.com/ansible/latest/modules/authorized_key_module.html
+#         http://docs.ansible.com/ansible/latest/modules/sysctl_module.html
+#         https://tecadmin.net/enable-logging-in-iptables-on-linux/
+#-------------------------------------------------------------#
+
+# Configuring firewall rules using IpTables, to act as a packet filter and firewall, 
+# examines and directs network traffic based on port, protocol, and other criteria.
+
+# For IpTables IPv4
+security_ip4tables_enable: true                                #
+
+security_ip4tables_service_files:                              #
+  - iptables-store.service
+  - iptables-restore.service
+
+security_ip4tables_log_enable: true                            #
+security_ip4tables_log_prefix: "IPTABLE-IPV4"                  #
+security_ip4tables_log_file: "ip4tables.log"                   #
+security_ip4tables_log_folder: "/var/log/iptables"             #
+
+security_ip4tables_rules_file: "./files/iptables-rules-save"   #
+security_ip4tables_rules_dest: "/var/lib/iptables/rules-save"  #
+security_ip4tables_rules_overwrite: |                          #
+  *filter
+  :INPUT DROP [0:0]
+  :FORWARD DROP [0:0]
+  :OUTPUT ACCEPT [0:0]
+  # Accept all loopback (local) traffic:
+  -A INPUT -i lo -j ACCEPT
+  # Keep existing connections (like our SSH session) alive:
+  -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+  # Accept all TCP/IP traffic to SSH
+  -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+  # Accept pings:
+  -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+  -A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
+  -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+  # Enable Iptables LOG
+  -A INPUT   -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-INPUT----> " 
+  -A FORWARD -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-FORWARD--> " 
+  -A OUTPUT  -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-OUTPUT---> " 
+  COMMIT
+
+
+# For IpTables IPv6
+security_ip6tables_enable: false                               #
+
+security_ip6tables_service_files:                              #
+  - ip6tables-store.service
+  - ip6tables-restore.service
+
+security_ip6tables_log_enable: false                           #
+security_ip6tables_log_prefix: "IPTABLE-IPV6"                  #
+security_ip6tables_log_file: "ip6tables.log"                   #
+security_ip6tables_log_folder: "/var/log/iptables"             #
+
+security_ip6tables_rules_file: "./files/ip6tables-rules-save"  #
+security_ip6tables_rules_dest: "/var/lib/ip6tables/rules-save" #
+security_ip6tables_rules_overwrite: "no"                       #

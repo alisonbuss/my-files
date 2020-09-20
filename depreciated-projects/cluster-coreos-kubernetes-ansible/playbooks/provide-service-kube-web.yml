@@ -1,0 +1,14 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: https://docs.ansible.com/ansible/2.4/import_tasks_module.html#examples
+#-------------------------------------------------------------#
+
+# - name: "Publish Traefik Service on Kubernetes"
+#   hosts: localhost
+#   vars_files:
+#     - "./library/tasks/k8s-service-traefik/vars/main.yml"
+#   tasks:
+#     - import_tasks: "./library/tasks/k8s-service-traefik/main.yml"
+#       tags: task-k8s-service-traefik
+#       when: true

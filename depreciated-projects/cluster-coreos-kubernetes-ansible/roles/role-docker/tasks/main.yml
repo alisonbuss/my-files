@@ -1,0 +1,44 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Installs Docker from official Docker binaries archive. 
+#         For managing Docker daemon systemd is used.
+# @fonts: https://github.com/githubixx/ansible-role-docker
+#         https://coreos.com/os/docs/latest/getting-started-with-docker.html
+#-------------------------------------------------------------#
+
+# Print the current operating system and the supported systems in the role.
+- name: "Output: View current system and supported systems by the role"
+  debug:
+    msg: "--Current System:[{{system_current}}] --System Supported:[{{system_support_centos}},{{system_support_ubuntu}},{{system_support_coreos}}]"
+
+- name: "Create directory for services of the SystemD"
+  file:
+    path: "{{docker_systemd_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Create docker-tcp.socket systemd file"
+  template:
+    src: "../templates/docker-tcp.socket.j2"
+    dest: "{{docker_systemd_dir}}/docker-tcp.socket"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Enable and start docker-tcp.socket"
+  systemd:
+    daemon_reload: yes
+    name: docker-tcp.socket
+    enabled: yes
+    state: started
+    no_block: yes
+
+- name: "Enable and start Docker"
+  systemd:
+    daemon_reload: yes
+    name: docker
+    enabled: yes
+    state: started
+    no_block: yes

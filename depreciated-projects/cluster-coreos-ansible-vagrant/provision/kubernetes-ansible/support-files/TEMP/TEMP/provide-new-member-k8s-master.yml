@@ -1,0 +1,27 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# 1ª) Step:
+- name: "Provisioning common tools and services for the new member(Master)"
+  hosts: new-member-k8s-master
+  sudo: yes
+  roles:
+    - role: config-security
+      tags: role-config-security
+
+    - role: config-storage-unit  
+      tags: role-config-storage-unit 
+
+# 2ª) Step:
+- name: "Provisioning tools and services (etcd, kube-apiserver, kube-scheduler, kube-controller-manager)"
+  hosts: new-member-k8s-master
+  sudo: yes
+  roles:
+    - role: config-etcd
+      tags: role-config-etcd
+    
+    - role: config-k8s-controller
+      tags: role-config-k8s-controller

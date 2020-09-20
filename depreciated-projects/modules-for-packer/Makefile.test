@@ -1,0 +1,84 @@
+#!/bin/bash
+
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Script to test the Makefile
+# @fonts: 	
+# @example:
+#       bash Makefile.test plan
+#    OR
+#       bash Makefile.test compile
+#    OR
+#       bash Makefile.test compile-all
+#-------------------------------------------------------------#
+
+# @descr: Main function of the script, it runs automatically on the script call.
+# @param: 
+#    $@ | array: (*)
+function MakefileTest {
+    local new_model_name="coreos-vagrant";
+    local coreos_release="stable";
+    local coreos_version="1576.5.0";
+
+    local ARGUMENTS="NEW_MODEL_NAME=${new_model_name} COREOS_RELEASE=${coreos_release} COREOS_VERSION=${coreos_version}";
+
+    case "$@" in
+        plan) {
+            make plan $ARGUMENTS;
+
+        };;
+        compile) {
+            make plan compile $ARGUMENTS;
+
+        };;
+        build) {
+            make plan build $ARGUMENTS;
+
+        };;
+        build-force) {
+            make build-force $ARGUMENTS;
+
+        };;
+        install-box) {
+            make plan install-box $ARGUMENTS;
+
+        };;
+        uninstall-box) {
+            make uninstall-box $ARGUMENTS;
+
+        };;
+        clean) {
+            make clean $ARGUMENTS;
+
+        };;
+        compile-all) {
+            make compile NEW_MODEL_NAME=coreos-all-platforms \
+                         COREOS_RELEASE=${coreos_release} \
+                         COREOS_VERSION=${coreos_version};
+
+            make compile NEW_MODEL_NAME=coreos-aws \
+                         COREOS_RELEASE=${coreos_release} \
+                         COREOS_VERSION=${coreos_version};
+
+            make compile NEW_MODEL_NAME=coreos-digitalocean \
+                         COREOS_RELEASE=${coreos_release} \
+                         COREOS_VERSION=${coreos_version};
+
+            make compile NEW_MODEL_NAME=coreos-google \
+                         COREOS_RELEASE=${coreos_release} \
+                         COREOS_VERSION=${coreos_version};
+                         
+            make compile NEW_MODEL_NAME=coreos-vagrant \
+                         COREOS_RELEASE=${coreos_release} \
+                         COREOS_VERSION=${coreos_version};
+        };;
+        *) {
+            echo "WARNING: The test type has not been passed or is incorrect.";
+        };;
+    esac
+}
+
+# @descr: Call of execution of the script's main function.
+MakefileTest "$@" 2>&1 | tee Makefile.test.log;
+
+# @descr: Finishing the script!!! :P
+exit 0;

@@ -1,0 +1,29 @@
+
+<nav class="navbar navbar-dark bg-primary navbar-expand-sm">
+    <div class="container">
+        <a routerLink="/" class="navbar-brand" href="#">Publish Articles</a>
+        <button type="button" class="navbar-toggler" 
+                data-toggle="collapse" 
+                data-target="#navbarNavAltMarkup"
+                aria-controls="navbarNavAltMarkup" 
+                aria-expanded="false" 
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="navbarNavAltMarkup" class="collapse navbar-collapse">
+            <div class="navbar-nav">
+                <a routerLinkActive="active" routerLink="/articles" class="nav-item nav-link">Articles <span class="sr-only">(current)</span></a>
+                <a routerLinkActive="active" routerLink="/articles/11/911/11-01-2001/article-title..." class="nav-item nav-link">Article X</a>
+            </div>
+        </div>
+        <div class="collapse navbar-collapse justify-content-end">
+            <div class="navbar-nav">
+                <!-- Only display this item if the user has authenticated. -->
+                <a *ngIf="showMenu" routerLinkActive="active" routerLink="/admin" class="nav-item nav-link">Admin</a>
+                <a routerLinkActive="active" routerLink="/login" class="nav-item nav-link">Login</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+{{ valueTest }}

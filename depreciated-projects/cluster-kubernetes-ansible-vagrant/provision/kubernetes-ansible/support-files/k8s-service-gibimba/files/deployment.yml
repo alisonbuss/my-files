@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gibimba-com
+  namespace: default
+  labels:
+    app: gibimba-com
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gibimba-com
+  template:
+    metadata:
+      labels:
+        app: gibimba-com
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.12.0
+        ports:
+        - containerPort: 80

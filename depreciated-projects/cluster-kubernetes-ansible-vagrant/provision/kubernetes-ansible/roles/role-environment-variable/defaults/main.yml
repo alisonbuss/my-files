@@ -1,0 +1,28 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the (Environment Variable) rule.
+# @fonts: https://github.com/weareinteractive/ansible-environment
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+system_support_coreos: coreos
+
+# Path to the environment file
+environment_file: /etc/environment
+
+# The environment file owner
+environment_file_owner: root
+
+# The environment file group
+environment_file_group: root
+
+# A dictionary of config parameters i.e
+#
+# environment_config:
+#   LC_ALL: en_US.UTF-8
+environment_config: {}
+

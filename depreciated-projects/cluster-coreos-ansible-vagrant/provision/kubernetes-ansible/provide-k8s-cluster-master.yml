@@ -1,0 +1,114 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# 6ª) Step:
+- name: "Generate certificate authority for Kubernetes(kube-apiserver, kube-proxy, kubelet-workers, kubectl)"
+  hosts: "localhost"
+  vars_files:
+    - "{{ global_public_vars_file }}"
+  roles:
+    - role: generate-ca-k8s
+      vars:
+        generate_ca_kube_apiserver: true
+        generate_ca_kube_proxy: true
+        generate_ca_kubelet_worker: true
+        generate_ca_kubectl: true
+
+        k8s_certs_source_directory: "{{ global_ca_k8s_source_directory }}"
+        ca_k8s_master_interface: "{{ global_k8s_master_interface }}"
+        ca_k8s_worker_interface: "{{ global_k8s_worker_interface }}"
+
+      tags: role-generate-ca-k8s
+      when: true
+
+# 7ª) Step:
+- name: "Generate Kubernetes Configuration Files(kubeconfigs) for Authentication"
+  hosts: "localhost"
+  vars_files:
+    - "{{ global_public_vars_file }}"
+  roles:
+    - role: generate-kubeconfigs
+      vars:
+        generate_config_kubelets: true
+        generate_config_kube_proxy: true
+        generate_config_encryption: true
+
+        k8s_config_cluster_name: "{{ global_kubernetes_cluster_name }}"
+        k8s_config_encryption_key: "{{ global_kubernetes_encryption_key }}"
+        k8s_certs_source_directory: "{{ global_ca_k8s_source_directory }}"
+        k8s_configs_source_directory: "{{ global_kubeconfigs_source_directory }}}"
+        
+      tags: role-generate-kubeconfigs
+      when: true
+
+
+# 1ª) Step:
+- name: "Provide firewall security criteria through IpTables (All hosts K8s Master)"
+  hosts: cluster_k8s_master
+  become: true
+  become_user: root
+  vars_files:
+    - "{{ global_vars_file_public }}"
+    - "{{ global_vars_file_ssh_deploy }}"
+  roles:
+    - role: config-security-iptables
+      vars:
+        security_ip4tables_rules_overwrite: |
+          *filter
+          :INPUT DROP [0:0]
+          :FORWARD DROP [0:0]
+          :OUTPUT ACCEPT [0:0]
+          # Accept all loopback (local) traffic:
+          -A INPUT -i lo -j ACCEPT
+          # Keep existing connections (like our SSH session) alive:
+          -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+          # Accept all TCP/IP traffic to SSH
+          -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+          # Accept pings:
+          -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+          # Enable Iptables LOG
+          -A INPUT   -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-INPUT----> " 
+          -A FORWARD -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-FORWARD--> " 
+          -A OUTPUT  -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-OUTPUT---> " 
+          COMMIT
+      tags: role-config-security-iptables
+      when: true
+
+      
+
+# 2ª) Step:
+- name: "Providing service to the Master of Kubernetes(kube-apiserver, kube-scheduler, kube-controller-manager)"
+  hosts: cluster_k8s_master
+  become: true
+  become_user: root
+  vars_files:
+    - "{{ global_vars_file_public }}"
+    - "{{ global_vars_file_ssh_deploy }}"
+  roles:
+    - role: config-k8s-controller
+      vars:
+        k8s_version: "{{ global_k8s_version }}"
+      tags: role-config-k8s-controller
+      when: true
+
+
+# 3ª) Step:
+- name: "Client Kubectl: Create an authenticated administrator user to access a Kubernetes API Server"
+  hosts: "localhost"
+  vars_files:
+    - "{{ global_vars_file_public }}"
+  roles:
+    - role: generate-kubeconfigs
+      vars:
+        generate_connection_admin_kubectl: true
+        k8s_config_cluster_name: "{{ global_kubernetes_cluster_name }}"
+        k8s_config_encryption_key: "{{ global_kubernetes_encryption_key }}"
+        k8s_config_master_interface: "{{ global_k8s_master_interface }}"
+        k8s_config_worker_interface: "{{ global_k8s_worker_interface }}"
+      tags: role-generate-kubeconfigs
+      when: true

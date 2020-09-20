@@ -1,0 +1,9 @@
+#cloud-config
+
+users:
+  - name: "teste"
+    passwd: "$1$G5qGDBp7$BYrRnKuGMXFYaZojrQ02h/"
+    system: true
+    groups:
+      - "sudo"
+      - "docker"

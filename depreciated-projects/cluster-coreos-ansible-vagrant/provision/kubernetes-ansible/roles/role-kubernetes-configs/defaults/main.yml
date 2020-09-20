@@ -1,0 +1,48 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the (Generating kubeconfig’s) rule.
+# @fonts: https://kubernetes.io/docs/admin/accessing-the-api/
+#         https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/1.8.0/docs/05-kubernetes-configuration-files.md
+#         https://github.com/githubixx/ansible-kubernetes-playbooks
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kubelets.yml
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kube-proxy.yml
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/tree/master/kubeencryptionconfig
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubectlconfig/kubectlconfig.yml
+#-------------------------------------------------------------#
+
+# Flag - Control for generate kubeconfigs
+kubeconfigs_kubelets: false
+kubeconfigs_kube_proxy: false
+kubeconfigs_encryption: false
+kubeconfigs_admin_kubectl: false
+
+# The directory from where to copy the K8s kubeconfigs.
+# From rule: generate-kubeconfigs
+kubeconfigs_source_directory: "{{ '~/k8s/kubeconfigs' | expanduser }}"
+
+# The directory from where to copy the K8s certificates. 
+kubeconfigs_ca_k8s_source_directory: "{{ '~/k8s/certs/kubernetes' | expanduser }}"
+
+# CHANGE THIS VALUE!
+# Enable and configure encryption of secret data at rest.
+# Sets a cluster entry in kubeconfig. Specifying a name that already
+# exists will merge new fields on top of existing values for those fields.
+# Font: https://kubernetes.io/docs/getting-started-guides/scratch/#preparing-credentials
+#       http://blog.christianposta.com/kubernetes/logging-into-a-kubernetes-cluster-with-kubectl/
+#       https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+kubeconfigs_cluster_name: "cluster-kubernetes"
+
+# CHANGE THIS VALUE!
+# Enable and configure encryption of secret data at rest.
+# Run command to generate key: $ openssl rand -base64 382 | tr -d '\n' && echo
+# Font: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+kubeconfigs_encryption_key: "YLXdi1xnNLOM4+IUd5aeNO6ps6JaKYTCDaMYJRrD+gk="
+
+# Determine name of the inventory host group.
+kubeconfigs_master_group_name: "cluster_k8s_master"
+kubeconfigs_worker_group_name: "cluster_k8s_worker"
+
+# The interface on which services should listen.
+kubeconfigs_master_interface: "enp0s8"
+kubeconfigs_worker_interface: "enp0s8"
+

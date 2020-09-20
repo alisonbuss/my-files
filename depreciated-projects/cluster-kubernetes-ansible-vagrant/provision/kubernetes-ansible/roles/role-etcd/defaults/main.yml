@@ -1,0 +1,78 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Etcd rule.
+# @fonts: https://github.com/githubixx/ansible-role-etcd
+#         https://coreos.com/etcd/docs/latest/op-guide/configuration.html
+#         https://coreos.com/etcd/docs/latest/tls-etcd-clients.html
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+system_support_coreos: coreos
+
+# The directory from where to copy the Etcd certificates. 
+etcd_ca_source_directory: "{{ '~/k8s/certs/etcd' | expanduser }}"
+
+# Etcd version
+etcd_version: "3.2.15"
+# Etcd data directory (etcd database files so to say)
+etcd_data_dir: "/var/lib/etcd"
+# The directory from service(etcd-member.service) to up an etcd3 in a container in CoreOS.
+etcd_systemd_dir: "/etc/systemd/system/etcd-member.service.d"
+# Directory of support files for system provisioning.
+etcd_support_files_dir: "/support-files/etcd-v{{etcd_version}}"
+# Port where etcd listening for clients
+etcd_client_port: "2379"
+# Port where etcd is listening for it's peer's
+etcd_peer_port: "2380"
+# Interface to bind etcd ports to
+etcd_interface: "enp0s8"
+# Determine name of the inventory host group
+etcd_group_name: "cluster_etcd"
+
+# Directory (Certificate authority and certificate files for etcd)
+etcd_certs_dir: "/etc/ssl/certs"
+# Client/Server TLS trusted CA key file/peer server TLS trusted CA file
+etcd_ca_pem_file: "ca-etcd.pem"
+# Peer server TLS cert file
+etcd_cert_pem_file: "cert-etcd.pem"
+# Peer server TLS key file
+etcd_cert_key_pem_file: "cert-etcd-key.pem"
+
+# Documentation: https://coreos.com/etcd/docs/latest/op-guide/configuration.html
+# Etcd is configurable through command-line flags and environment variables
+etcd_settings:
+  "name": "{{hostvars[inventory_hostname]['ansible_hostname']}}-server"
+  "advertise-client-urls": "{{'https://' + hostvars[inventory_hostname]['ansible_' + etcd_interface].ipv4.address + ':' + etcd_client_port}}"
+  "initial-advertise-peer-urls": "{{'https://' + hostvars[inventory_hostname]['ansible_' + etcd_interface].ipv4.address + ':' + etcd_peer_port}}"
+  "listen-client-urls": "{{'https://' + hostvars[inventory_hostname]['ansible_' + etcd_interface].ipv4.address + ':' + etcd_client_port + ',http://127.0.0.1:' + etcd_client_port}}"
+  "listen-peer-urls": "{{'https://' + hostvars[inventory_hostname]['ansible_' + etcd_interface].ipv4.address + ':' + etcd_peer_port}}"
+  
+  "initial-cluster-token": "unique-token-for-etcd-group" # Initial cluster token for the etcd cluster during bootstrap.
+  "initial-cluster-state": "new" # Initial cluster state ('new' or 'existing')
+  
+  "cert-file": "{{etcd_certs_dir}}/{{etcd_cert_pem_file}}"
+  "key-file": "{{etcd_certs_dir}}/{{etcd_cert_key_pem_file}}"
+  "client-cert-auth": "true" # Enable client cert authentication
+  
+  "peer-cert-file": "{{etcd_certs_dir}}/{{etcd_cert_pem_file}}"
+  "peer-key-file": "{{etcd_certs_dir}}/{{etcd_cert_key_pem_file}}"
+  "peer-client-cert-auth": "true" # Enable peer client cert authentication
+  
+  "trusted-ca-file": "{{etcd_certs_dir}}/{{etcd_ca_pem_file}}"
+  "peer-trusted-ca-file": "{{etcd_certs_dir}}/{{etcd_ca_pem_file}}"
+
+  "auto-compaction-retention": "0" # Auto compaction retention in hour. 0 means disable auto compaction.
+  "heartbeat-interval": "100" # Time (in milliseconds) of a heartbeat interval
+  "election-timeout": "1000" # Time (in milliseconds) for an election to timeout. See tuning documentation for details
+  "snapshot-count": "100000" # Number of committed transactions to trigger a snapshot to disk
+  "log-package-levels": "" # Specify a particular log level for each etcd package (eg: 'etcdmain=CRITICAL,etcdserver=DEBUG')
+  "max-snapshots": "5" # Maximum number of snapshot files to retain (0 is unlimited)
+  "max-wals": "5" # Maximum number of wal files to retain (0 is unlimited)
+  "wal-dir": "" # Dedicated wal directory ("" means no seperated WAL directory)
+  "cors": "" # Comma-separated whitelist of origins for CORS (cross-origin resource sharing)
+
+etcd_settings_merge: {}

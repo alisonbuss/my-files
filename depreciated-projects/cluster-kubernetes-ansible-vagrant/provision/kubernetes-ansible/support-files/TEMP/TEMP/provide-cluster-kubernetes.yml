@@ -1,0 +1,93 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# # 1ª) Step: https://kubernetes.io/docs/concepts/storage/volumes/#nfs
+# - name: "Provisioning and configuring a storage server (Network File System, NFS)"
+#   hosts: storage-servers
+#   become: true
+#   become_user: root
+#   roles:
+#     - role: config-security
+#       tags: role-config-security
+#       when: true
+
+#     - role: config-peervpn
+#       tags: role-config-peervpn
+#       when: true
+
+#     - role: config-storage-server
+#       tags: role-config-storage-server
+#       when: true
+
+# 2ª) Step:
+- name: "Provisioning common tools and services in all the cluster"
+  hosts: cluster-k8s-all:children
+  become: true
+  become_user: root
+  roles:
+    - role: config-security
+      tags: role-config-security
+      when: true
+
+    - role: config-peervpn
+      tags: role-config-peervpn
+      when: true
+
+    - role: config-storage-unit
+      tags: role-config-storage-unit
+      when: true
+
+# 3ª) Step:
+- name: "Provisioning a cluster Etcd"
+  hosts: cluster-etcd
+  become: true
+  become_user: root
+  roles:
+    - role: config-etcd
+      tags: role-config-etcd
+      when: true
+
+# 4ª) Step:
+- name: "Provisioning tools and services (kube-apiserver, kube-scheduler, kube-controller-manager)"
+  hosts: cluster-k8s-master
+  become: true
+  become_user: root
+  roles:
+    - role: config-k8s-controller
+      tags: role-config-k8s-controller
+      when: true
+
+# 5ª) Step:
+- name: "Generating admin user for authentication (Kubectl)"
+  hosts: localhost
+  roles:
+    - role: generate-kubeconfigs
+      vars:
+        generate_admin_kubectl: true
+      tags: role-generate-kubeconfigs
+      when: false
+
+# 6ª) Step:
+- name: "Provisioning tools and services (rkt, docker, flannel, kube-proxy, kubelet)"
+  hosts: cluster-k8s-worker
+  become: true
+  become_user: root
+  roles:
+    - role: config-rkt
+      tags: role-config-rkt
+      when: true
+
+    - role: config-docker
+      tags: role-config-docker
+      when: true
+    
+    - role: config-flannel
+      tags: role-config-flannel
+      when: true
+    
+    - role: config-k8s-worker
+      tags: role-config-k8s-worker
+      when: true

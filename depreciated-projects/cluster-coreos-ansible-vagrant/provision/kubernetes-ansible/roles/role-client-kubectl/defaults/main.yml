@@ -1,0 +1,31 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Kubectl rule.
+# @fonts: https://github.com/githubixx/ansible-role-kubectl
+#         https://kubernetes.io/docs/tasks/tools/install-kubectl/
+#-------------------------------------------------------------#
+
+# "kubectl" version to install
+kubectl_version: "1.10.0"
+
+# SHA256 checksum of the archive see https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.10.md#downloads-for-v1100
+# for the checksums
+#kubectl_checksum: "sha256:845668fe2f854b05aa6f0b133314df83bb41a486a6ba613dbb1374bf3fbe8720"
+
+# Operarting system on which "kubectl" should run on
+kubectl_os: "linux" # use "darwin" for MacOS X, "windows" for Windows
+
+# Processor architecture "kubectl" should run on
+kubectl_arch: "amd64" # other possible values: "386","arm64","arm","ppc64le","s390x"
+
+# Where to install "kubectl" binary
+kubectl_bin_directory: "/usr/local/bin"
+
+# Directory to store the kubeclient archive
+kubectl_tmp_directory: "{{lookup('env', 'TMPDIR') | default('/tmp', true)}}"
+
+# Owner of "kubectl" binary
+kubectl_owner: "root"
+
+# Group of "kubectl" binary
+kubectl_group: "root"

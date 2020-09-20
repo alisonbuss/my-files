@@ -1,0 +1,16 @@
+---
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+system_support_coreos: coreos
+
+# The directory from services(*.service) of systemd.
+rkt_systemd_dir: "/etc/systemd/system"
+
+rkt_version: "1.30.0"
+
+# Directory of support files for system provisioning.
+rkt_support_files_dir: "/support-files/rkt-v{{rkt_version}}"

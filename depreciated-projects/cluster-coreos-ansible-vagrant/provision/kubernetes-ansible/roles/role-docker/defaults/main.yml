@@ -1,0 +1,7 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Docker rule.
+# @fonts: https://github.com/githubixx/ansible-role-docker
+#         https://coreos.com/os/docs/latest/getting-started-with-docker.html
+#-------------------------------------------------------------#
+

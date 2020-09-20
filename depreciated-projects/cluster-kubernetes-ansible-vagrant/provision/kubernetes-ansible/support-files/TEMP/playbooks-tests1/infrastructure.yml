@@ -1,0 +1,147 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# - name: "Provide encrypted network traffic using PeerVPN and basic host security"
+#   hosts: cluster_etcd
+#   become: true
+#   become_user: root
+#   vars_files:
+#     - "./library/variables/global/vars-global.yml"
+#   vars:
+#     host_index: "{{ ansible_play_batch.index(inventory_hostname) | int + 1 }}"
+#     var_hosts_etcd: |
+#       {% set comma = joiner(",") %}
+#       {% for host in groups['cluster_etcd'] -%}
+#         {{ comma() }}https://{{ hostvars[host]['ansible_enp0s8'].ipv4.address }}:2379
+#       {%- endfor %}
+
+#   pre_tasks:
+#     - name: "Formatting the etcd endpoint"
+#       set_fact:
+#         var_hosts_etcd_format: "{{ var_hosts_etcd | replace('\n', '') }}"
+
+#     - name: "Output: Increment variable"
+#       debug:
+#         msg: "RESULT: {{ host_index }}"
+
+#     - name: "Output: inventory_hostname"
+#       debug:
+#         msg: "RESULT: {{ inventory_hostname }}"
+
+#     - name: "Output: Get private IP"
+#       debug:
+#         msg: "RESULT: {{ ansible_host }}"
+
+#     - name: "Output: Get host name"
+#       debug:
+#         msg: "RESULT: {{ ansible_hostname }}"
+
+#     - name: "Output: Get domain name"
+#       debug:
+#         msg: "RESULT: {{ ansible_domain }}"
+
+#     - name: "Output: Get host name and domain"
+#       debug:
+#         msg: "RESULT: {{ ansible_hostname }}.{{ ansible_domain }}"
+    
+#     - name: "Output: Endpoint formatted from the ETCD cluster"
+#       debug:
+#         msg: "RESULT: {{ var_hosts_etcd_format }}"
+
+
+
+
+
+  # vars_files:
+  #   - "./library/variables/global/vars-global.yml"
+  # vars:
+  #   current_host_index: "{{ ansible_play_batch.index(inventory_hostname) | int + 1 }}"
+  #   ipv4_address_first_master_host: "{{ hostvars[groups['cluster_k8s_master']|first]['ansible_host'] }}"
+  # pre_tasks:
+  #   - name: "Output: Current incremental host value"
+  #     debug:
+  #       msg: "RESULT: {{ current_host_index }}"
+
+  #   - name: "Output: IP address of the first master host"
+  #     debug:
+  #       msg: "RESULT: {{ ipv4_address_first_master_host }}"
+
+  #   - name: "Output: ansible_distribution"
+  #     debug:
+  #       msg: "RESULT: {{ ansible_distribution }}"
+
+  #   - name: "Output: ansible_os_family"
+  #     debug:
+  #       msg: "RESULT: {{ ansible_os_family }}"
+
+  #   - name: "Output: ansible_user_id"
+  #     debug:
+  #       msg: "RESULT: {{ ansible_user_id }}"
+
+  #   - name: "Output: ansible_processor"
+  #     debug:
+  #       msg: "RESULT: {{ ansible_processor }}"
+
+  #   - name: "Output: ansible_nodename"
+  #     debug:
+  #       msg: "RESULT: {{ ansible_nodename }}"
+
+
+
+- name: "Testing..."
+  hosts: localhost
+
+  vars:
+    var_first_host_etcd: "{{ groups['cluster_etcd'] | first }}"
+
+  tasks:
+    - name: "Register kubectl installation status"
+      shell: "ansible -i {{ ansible_inventory_sources[0] }} all -m setup"
+      register: cmd_ansible_setup
+      ignore_errors: true
+      when: false
+
+    - name: "TEST: inventory_hostname..."
+      debug: var=inventory_hostname
+      ignore_errors: true
+
+    - name: "TEST: inventory_hostname..."
+      debug: var=inventory_hostname
+      ignore_errors: true
+
+    - name: "TEST: hostvars[inventory_hostname]..."
+      debug: var=hostvars[inventory_hostname]
+      ignore_errors: true
+    
+    - name: "TEST: groups..."
+      debug: var=groups
+      ignore_errors: true
+    
+    - name: "TEST: hostvars[groups['cluster_etcd'][0]]..."
+      debug: var=hostvars[groups['cluster_etcd'][0]]
+      ignore_errors: true
+
+    - name: "TEST: groups['cluster_etcd']..."
+      debug: var=groups['cluster_etcd']
+      ignore_errors: true
+
+    - name: "TEST: hostvars[groups['cluster_etcd'][0]]['ansible_host']..."
+      debug: var=hostvars[groups['cluster_etcd'][0]]['ansible_host']
+      ignore_errors: true 
+
+    - name: "TEST: hostvars[groups['cluster_etcd'][0]]['ansible_enp0s8'].ipv4.address..."
+      debug: var=hostvars[groups['cluster_etcd'][0]]['ansible_enp0s8'].ipv4.address
+      ignore_errors: true  
+
+    - name: "TEST: with_inventory_hostnames: cluster_etcd..."
+      debug: 
+        msg: 
+          - "{{ hostvars[item]['ansible_hostname'] }}"
+          - "{{ hostvars[item]['ansible_host'] }}"
+          - "{{ hostvars[item]['ansible_enp0s8'].ipv4.address }}" 
+      with_inventory_hostnames:
+        - cluster_etcd
+      ignore_errors: true

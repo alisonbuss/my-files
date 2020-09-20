@@ -1,0 +1,100 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Install CFSSL PKI toolkit for generates certificate authority TLS"
+  hosts: localhost
+  tasks:
+    - name: Register maven installation status
+      shell: "which cfssl"
+      register: kubectl_installed
+      ignore_errors: true
+    - debug:
+        msg: "TEST: failed: {{ kubectl_installed }}"
+      when: kubectl_installed is failed
+    - debug:
+        msg: "TEST: success: {{ kubectl_installed }}"
+      when: kubectl_installed is success
+    - name: "Output: kubectl installation status"
+      debug:
+        msg: "RESULT: {% if kubectl_installed.rc == 0 %}installed{% else %}not installed{% endif %}"
+    - name: "WARNING: Configuration not implemented!!!"
+      debug:
+        msg: "OUTPUT: {{hostvars[inventory_hostname]['ansible_hostname']}} - {{hostvars[inventory_hostname]['ansible_host']}}"
+
+    # - name: Register maven installation status
+    #   command: which pica
+    #   changed_when: false
+    #   failed_when: false
+    #   register: mvn_installed
+      
+    # - name: Check maven installation status
+    #   fail:
+    #     msg: "Maven appears to be missing, install first"
+    #   when: mvn_installed | failed
+
+
+# - name: "Provisioning a cluster environment Etcd"
+#   hosts: cluster-etcd
+#   become: true
+#   become_user: root
+#   roles:
+#     - role: config-etcd
+#       tags: role-config-etcd
+#       when: false
+
+# - name: "Provisioning tools and services (kube-apiserver, kube-scheduler, kube-controller-manager)"
+#   hosts: cluster-k8s-master
+#   become: true
+#   become_user: root
+#   roles:
+#     - role: config-k8s-controller
+#       tags: role-config-k8s-controller
+#       when: false
+
+# - name: "Generating admin user for authentication (Kubectl)"
+#   hosts: localhost
+#   roles:
+#     - role: generate-kubeconfigs
+#       vars:
+#         generate_admin_kubectl: true
+#       tags: role-generate-kubeconfigs
+#       when: false
+
+
+# - name: "Provisioning tools and services (rkt, docker, flannel, kube-proxy, kubelet)"
+#   hosts: cluster-k8s-worker
+#   become: true
+#   become_user: root
+#   roles:
+#     - role: config-rkt
+#       tags: role-config-rkt
+#       when: false
+
+#     - role: config-flannel
+#       tags: role-config-flannel
+#       when: false  
+
+#     - role: config-docker
+#       tags: role-config-docker
+#       when: false
+    
+#     - role: config-k8s-worker
+#       tags: role-config-k8s-worker
+#       when: false
+
+
+# - name: host
+#   debug: msg="{{ hostvars[item]["ansible_host"] }}" 
+#   with_items:
+#     - "{{ groups['cluster-etcd'] }}"
+
+  #tasks:
+  #  - debug:
+  #      msg: |
+  #        {% set comma = joiner(",") %}
+  #        {% for item in groups["cluster-k8s-worker"] -%}
+  #            {{ comma() }}{{ hostvars[item]["ansible_host"] }}
+  #        {%- endfor %}

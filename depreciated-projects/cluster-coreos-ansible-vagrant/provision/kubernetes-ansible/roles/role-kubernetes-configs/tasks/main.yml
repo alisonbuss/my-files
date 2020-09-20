@@ -1,0 +1,33 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Generating Kubernetes Configuration Files for Authentication, enable 
+#         Kubernetes clients to locate and authenticate to the Kubernetes API Servers
+# @fonts: https://kubernetes.io/docs/admin/accessing-the-api/
+#         https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/1.8.0/docs/05-kubernetes-configuration-files.md
+#         https://github.com/githubixx/ansible-kubernetes-playbooks
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kubelets.yml
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kube-proxy.yml
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/tree/master/kubeencryptionconfig
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubectlconfig/kubectlconfig.yml
+#-------------------------------------------------------------#
+
+- name: Create directory for configuration(kubeconfigs) files
+  file:
+    path: "{{kubeconfigs_source_directory}}"
+    state: directory
+
+# Generate configuration(kubeconfigs) files for kubelets.
+- import_tasks: generate-config-kubelets.yml
+  when: (kubeconfigs_kubelets == true)
+
+# Generate configuration(kubeconfigs) files for kube-proxy.
+- import_tasks: generate-config-kube-proxy.yml
+  when: (kubeconfigs_kube_proxy == true)
+
+# Generate a encryption config containing the encryption key for K8s.
+- import_tasks: generate-config-encryption.yml
+  when: (kubeconfigs_encryption == true)
+
+# Create an authenticated administrator user to access a Kubernetes API Server.
+- import_tasks: generate-connection-admin-kubectl.yml
+  when: (kubeconfigs_admin_kubectl == true)

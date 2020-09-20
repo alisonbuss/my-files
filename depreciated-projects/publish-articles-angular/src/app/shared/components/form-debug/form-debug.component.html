@@ -1,0 +1,10 @@
+
+<div *ngIf="form" style="margin-top: 20px;" class="card">
+    <div class="card-body">
+        <h6>Detail form</h6>
+        <pre>Form valid?: {{ form.valid }}</pre>
+        <pre>Form submit: {{ form.submitted }}</pre>
+        <pre>Values: <br>{{ form.value | json }}</pre>
+    </div>
+<div>
+        

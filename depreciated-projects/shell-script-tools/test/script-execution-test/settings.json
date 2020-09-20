@@ -1,0 +1,26 @@
+{
+    "settings": [
+        {
+            "defaultPath": "./scripts/", 
+            "scripts": [
+                { "script": "script-x.sh", "action": "print2", "execute": true, 
+                    "param": { "message" : "Hello World!!" }
+                },
+                { "script": "script-y.sh", "action": "print1", "execute": true, 
+                    "param": { "message": "Que reinaste o anjo caído!" }  
+                }
+            ]
+        },
+        {
+            "defaultPath": "https://raw.githubusercontent.com/alisonbuss/shell-script-tools/master/test/script-execution-test/scripts/", 
+            "scripts": [
+                { "script": "script-x.sh", "action": "print1", "execute": true, 
+                    "param": { "message" : "Hello World!! On Cloud!!" } 
+                },
+                { "script": "script-y.sh", "action": "print2", "execute": true, 
+                    "param": { "message": "Que reinaste o anjo caído!! On Cloud!!" }  
+                }
+            ]
+        }
+    ]
+}

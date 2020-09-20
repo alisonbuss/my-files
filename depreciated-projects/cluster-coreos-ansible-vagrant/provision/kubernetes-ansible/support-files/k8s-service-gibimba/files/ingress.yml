@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gibimba-com
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+  - host: gibimba.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: gibimba-com
+          servicePort: 80
+  - host: www.gibimba.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: gibimba-com
+          servicePort: 80

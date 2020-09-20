@@ -1,0 +1,34 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the PeerVPN rule.
+# @fonts: https://github.com/githubixx/ansible-role-peervpn
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-3/
+#         https://peervpn.net/
+#-------------------------------------------------------------#
+
+# PeerVPN release
+peervpn_version: "0-044"
+
+# Directory for PeerVPN support
+peervpn_support_files_dir: "/support-files/peervpn-v{{ peervpn_version }}"
+
+# The directory for running the PeerVPN binary
+peervpn_bin_dir: "/opt/bin"
+
+# Variables for PeerVPN settings
+peervpn_conf_initpeers: "host.example.net 7000"
+peervpn_conf_enableipv4: "yes"
+peervpn_conf_enableipv6: "no"
+peervpn_conf_networkname: "peervpn"
+peervpn_conf_local: "0.0.0.0"
+peervpn_conf_ifconfig4: "10.0.0.1/24"
+peervpn_conf_port: 7000
+peervpn_conf_interface: "tap0"
+peervpn_conf_user: "nobody"
+peervpn_conf_group: "nogroup"
+peervpn_conf_psk: "default"
+peervpn_conf_enabletunneling: "yes"
+peervpn_conf_enablenat64clat: "no"
+peervpn_conf_enableprivdrop: "yes"
+peervpn_conf_enablerelay: "no"
+peervpn_conf_sockmark: 0

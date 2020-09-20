@@ -1,0 +1,63 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Security rule.
+# @fonts: https://github.com/githubixx/ansible-role-harden-linux
+#         https://www.linode.com/docs/security/firewalls/control-network-traffic-with-iptables/
+#         https://medium.com/@jasonrigden/hardening-ssh-1bcb99cd4cef
+#         https://www.digitalocean.com/community/tutorials/how-to-isolate-servers-within-a-private-network-using-iptables
+#         https://www.booleanworld.com/depth-guide-iptables-linux-firewall/
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-2/
+#         http://docs.ansible.com/ansible/latest/modules/user_module.html
+#         http://docs.ansible.com/ansible/latest/modules/authorized_key_module.html
+#         http://docs.ansible.com/ansible/latest/modules/sysctl_module.html
+#         https://tecadmin.net/enable-logging-in-iptables-on-linux/
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+system_support_coreos: coreos
+
+# Set user on system, privileges, and their SSH remote access keys.
+#
+# Sets the user account management configuration settings from Ansible.
+# Based on the Ansible parameters: http://docs.ansible.com/ansible/latest/modules/user_module.html#parameters
+# except the parameter: [user: ...]    
+#
+# example:
+#
+#    security_remote_access_users: # Defines a list of system users.
+#      - user: "deploy"            # Sets the user name.
+#        comment: "New User..."    #
+#        privilege: true           # Sets privilege to user by adding to sudoers.
+#        groups:                   #
+#          - sudo
+#        ssh_authorized_keys:      # Adds SSH authorized keys for particular user accounts.
+#          - "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+#          - "{{ lookup('file', './library/authorized-key-ssh/deploy.pub') }}"
+#        create_home: true         #
+#        home: "/home/deploy"      #
+#        shell: "/bin/bash"        #
+#        state: present            #
+#
+#      - user: "deploy01"
+#        ssh_authorized_keys:
+#          - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WD..."
+#
+security_remote_access_users: []
+
+# The "key" here is a regex of a setting you want to replace and the value is
+# the setting name + the setting value. E.g. we want to replace the line
+# "Port 22" with "Port 22222". The regex (the key) would be "^Port 22 " which
+# means "search for a line in /etc/ssh/sshd_config that begins with 'Port 22 '
+# and replace the whole line with 'Port 22222'". This enables you to replace
+# every setting in sshd_config.
+security_sshd_settings:
+  "^PasswordAuthentication": "PasswordAuthentication no"  # Disable password authentication
+  "^PermitRootLogin": "PermitRootLogin no"                # Disable SSH root login
+  "^PermitTunnel": "PermitTunnel no"                      # Disable tun(4) device forwarding
+  "^Port ": "Port 22"                                     # Set SSHd port
+
+security_sshd_settings_merge: {}

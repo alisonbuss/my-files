@@ -1,0 +1,21 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Docker rule.
+# @fonts: https://github.com/githubixx/ansible-role-docker
+#         https://coreos.com/os/docs/latest/getting-started-with-docker.html
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+system_support_coreos: coreos
+
+# The directory from services(k8s*.service) of systemd.
+docker_systemd_dir: "/etc/systemd/system"
+
+docker_version: "18.04.0"
+
+# Directory of support files for system provisioning.
+docker_support_files_dir: "/support-files/docker-v{{docker_version}}"

@@ -1,0 +1,13 @@
+[Unit]
+Description=Sends log output to (remote)
+
+[Service]
+Type=simple
+Restart=always
+TimeoutStartSec=60
+RestartSec=60
+ExecStart=/usr/bin/bash -c '/usr/bin/journalctl -o short -f | ncat 127.0.0.1 514'
+ExecStop=
+
+[Install]
+WantedBy=multi-user.target

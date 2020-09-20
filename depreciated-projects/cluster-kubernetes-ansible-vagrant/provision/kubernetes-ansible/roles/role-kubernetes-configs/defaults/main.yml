@@ -1,0 +1,61 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the (Generating kubeconfig’s) rule.
+# @fonts: https://kubernetes.io/docs/admin/accessing-the-api/
+#         https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/1.8.0/docs/05-kubernetes-configuration-files.md
+#         https://github.com/githubixx/ansible-kubernetes-playbooks
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kubelets.yml
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kube-proxy.yml
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/tree/master/kubeencryptionconfig
+#         https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubectlconfig/kubectlconfig.yml
+#-------------------------------------------------------------#
+
+# Flag - Control for generate kubernetes-configs
+k8s_configs_kubelets: false
+k8s_configs_kube_proxy: false
+k8s_configs_encryption: false
+k8s_configs_admin_kubectl: false
+
+# The directory from where to copy the K8s certificates
+k8s_ca_source_directory: "{{ '~/k8s/certs/kubernetes' | expanduser }}"
+
+# The directory from where to copy the K8s k8s_configs.
+k8s_configs_source_directory: "{{ '~/k8s/k8s-configs' | expanduser }}"
+
+# Client/Server TLS trusted CA key file/peer server TLS trusted CA file
+k8s_configs_apiserver_ca_pem_file: "ca-k8s-apiserver.pem"
+
+# Peer kubelet server TLS (cert and key) file
+k8s_configs_kubelet_cert_pem_file: "cert-k8s-kubelet-####.pem"
+k8s_configs_kubelet_cert_key_pem_file: "cert-k8s-kubelet-####-key.pem"
+
+# Peer proxy server TLS (cert and key) file
+k8s_configs_proxy_cert_pem_file: "cert-k8s-proxy.pem"
+k8s_configs_proxy_cert_key_pem_file: "cert-k8s-proxy-key.pem"
+
+# Peer kubectl admin TLS (cert and key) file
+k8s_configs_kubectl_cert_pem_file: "cert-k8s-kubectl.pem"
+k8s_configs_kubectl_cert_key_pem_file: "cert-k8s-kubectl-key.pem"
+
+# CHANGE THIS VALUE!
+# Enable and configure encryption of secret data at rest.
+# Sets a cluster entry in kubeconfig. Specifying a name that already
+# exists will merge new fields on top of existing values for those fields.
+# Font: https://kubernetes.io/docs/getting-started-guides/scratch/#preparing-credentials
+#       http://blog.christianposta.com/kubernetes/logging-into-a-kubernetes-cluster-with-kubectl/
+#       https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+k8s_configs_cluster_name: "cluster-kubernetes"
+
+# CHANGE THIS VALUE!
+# Enable and configure encryption of secret data at rest.
+# Run command to generate key: $ openssl rand -base64 382 | tr -d '\n' && echo
+# Font: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+k8s_configs_encryption_key: "YLXdi1xnNLOM4+IUd5aeNO6ps6JaKYTCDaMYJRrD+gk="
+
+# Determine name of the inventory host group.
+k8s_configs_master_group_name: "cluster_master"
+k8s_configs_worker_group_name: "cluster_worker"
+
+# The interface on which services should listen.
+k8s_configs_master_interface: "enp0s8"
+k8s_configs_worker_interface: "enp0s8"

@@ -1,0 +1,126 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Configuration from service(etcd-member.service) to up an etcd3 in a container in CoreOS.
+# @fonts: https://github.com/githubixx/ansible-role-etcd
+#         https://coreos.com/etcd/docs/latest/op-guide/clustering.html
+#         https://coreos.com/etcd/docs/latest/getting-started-with-etcd.html
+#         https://coreos.com/etcd/docs/latest/tls-etcd-clients.html
+#         https://www.mirantis.com/blog/everything-you-ever-wanted-to-know-about-using-etcd-with-kubernetes-v1-6-but-were-afraid-to-ask/
+#         https://coreos.com/etcd/docs/latest/tls-etcd-clients.html#configure-locksmith-to-use-secure-etcd-connection
+#         https://coreos.com/os/docs/latest/switching-channels.html
+#-------------------------------------------------------------#
+
+# Print the current operating system and the supported systems in the role.
+- name: "Output: View current system and supported systems by the role"
+  debug:
+    msg: "--Current System:[{{system_current}}] --System Supported:[{{system_support_centos}},{{system_support_ubuntu}},{{system_support_coreos}}]"
+
+- name: "Create directory from service(etcd-member.service)"
+  file:
+    path: "{{etcd_systemd_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Combine etcd_settings and etcd_settings_merge (if defined)"
+  set_fact:
+    etcd_settings: "{{ etcd_settings | combine(etcd_settings_merge | default({})) }}"
+
+- name: "Copy certificates 'Certificate authority for etcd certificates'"
+  copy:
+    src: "{{etcd_ca_source_directory}}/{{item}}"
+    dest: "{{etcd_certs_dir}}/{{item}}"
+    mode: 0640
+    owner: etcd
+    group: etcd
+  with_items:
+    - "{{etcd_ca_pem_file}}"
+    - "{{etcd_cert_pem_file}}"
+    - "{{etcd_cert_key_pem_file}}"
+
+- name: "Update Certificate authority for etcd certificates"
+  shell: "update-ca-certificates"
+
+- name: "Create systemd(etcd-member.service) unit file"
+  template:
+    src: "../templates/etcd-member.conf.j2"
+    dest: "{{etcd_systemd_dir}}/etcd-member.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Enable and start etcd-member"
+  systemd:
+    daemon_reload: yes
+    name: etcd-member
+    enabled: yes
+    state: started
+    no_block: yes
+
+- name: "Adding Environment Variable to ETCDCTL in (/etc/environment)"
+  blockinfile:
+    path: /etc/environment
+    owner: root
+    group: root
+    marker: "# {mark} ENVIRONMENT VARIABLE FOR THE ETCDCTL"
+    block: |
+      ETCDCTL_CA_FILE="{{etcd_certs_dir}}/{{etcd_ca_pem_file}}"
+      ETCDCTL_CERT_FILE="{{etcd_certs_dir}}/{{etcd_cert_pem_file}}"
+      ETCDCTL_KEY_FILE="{{etcd_certs_dir}}/{{etcd_cert_key_pem_file}}"
+
+- name: "Source the (/etc/environment) file"
+  shell: "source /etc/environment"
+
+- name: "Generate address list of ETCD Servers"
+  set_fact:
+    var_tmp_etcd_hosts: |
+      {% for host in groups[etcd_group_name] -%}
+          https://{{hostvars[host]['ansible_' + etcd_interface].ipv4.address}}:{{etcd_client_port}}{% if not loop.last %},{% endif %}
+      {%- endfor %}
+  when: (system_current == system_support_coreos)
+
+- name: "Remove rows and spaces from the address list of the ETCDS Servers"
+  set_fact:
+    var_etcd_endpoints: "{{ var_tmp_etcd_hosts | replace('\n', '') | replace(' ', '') }}"
+  when: (system_current == system_support_coreos)
+
+- name: "Output of address list of the ETCDS Servers"
+  debug: var=var_etcd_endpoints
+  when: (system_current == system_support_coreos)
+
+- name: "Create Drop-In directory for services of the (locksmith)"
+  file:
+    path: "/etc/systemd/system/locksmithd.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when: (system_current == system_support_coreos)
+
+# Specific for CoreOS distribution.
+# locksmith: Reboot manager for Container Linux
+- name: "Create a configuration file for the service(locksmithd)"
+  copy:
+    dest: "/etc/systemd/system/locksmithd.service.d/20-locksmithd-config.conf"
+    content: |
+      [Service]
+      Environment="LOCKSMITHD_ETCD_CAFILE={{etcd_certs_dir}}/{{etcd_ca_pem_file}}"
+      Environment="LOCKSMITHD_ETCD_CERTFILE={{etcd_certs_dir}}/{{etcd_cert_pem_file}}"
+      Environment="LOCKSMITHD_ETCD_KEYFILE={{etcd_certs_dir}}/{{etcd_cert_key_pem_file}}"
+      Environment="LOCKSMITHD_ENDPOINT={{var_etcd_endpoints}}"
+    force: true
+  when: (system_current == system_support_coreos)
+
+- name: "Enable and restart service (locksmithd)"
+  systemd:
+    daemon_reload: yes
+    name: locksmithd
+    state: restarted
+    no_block: no
+  when: (system_current == system_support_coreos)
+
+# ISSUE NOTICE:
+- name: "Configuration of the backup scheduler from Etcd to Ceph"
+  debug:
+    msg: "WARNING: Configuration not implemented!!!"

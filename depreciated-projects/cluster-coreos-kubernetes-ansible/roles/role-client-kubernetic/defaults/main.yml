@@ -1,0 +1,32 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Kubernetic rule.
+# @fonts: https://kubernetic.com/
+#         https://docs.kubernetic.com/
+#         https://docs.kubernetic.com/docs/cluster_authentication.html
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('ubuntu') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+
+# "Kubernetic" version to install
+kubernetic_version: "2.0.14"
+
+# Where to install "kuberneti" binary
+kuberneti_bin_directory: "/usr/local/bin"
+
+# Where to source "kuberneti" folder
+kubernetic_source_directory: "/opt/kubernetic"
+
+# Directory to store the kubeclient archive
+kubernetic_tmp_directory: "{{lookup('env', 'TMPDIR') | default('/tmp',true)}}"
+
+# Owner of "kubectl" binary
+kubernetic_owner: "root"
+
+# Group of "kubectl" binary
+kubernetic_group: "root"
+

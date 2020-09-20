@@ -1,0 +1,5 @@
+---
+
+- name: "WARNING: Configuration not implemented!!!"
+  debug:
+    msg: "OUTPUT: {{hostvars[inventory_hostname]['ansible_hostname']}} - {{hostvars[inventory_hostname]['ansible_host']}}"

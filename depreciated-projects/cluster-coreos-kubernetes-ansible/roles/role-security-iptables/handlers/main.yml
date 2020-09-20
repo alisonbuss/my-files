@@ -1,0 +1,11 @@
+---
+
+- name: restart iptables-restore
+  service:
+    name: iptables-restore
+    state: restarted
+
+- name: restart ip6tables-restore
+  service:
+    name: ip6tables-restore
+    state: restarted

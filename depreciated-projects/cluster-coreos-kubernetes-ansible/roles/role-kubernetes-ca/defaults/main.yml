@@ -1,0 +1,119 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the (Certificate Kubernetes) rule.
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-ca
+#         https://coreos.com/os/docs/latest/generate-self-signed-certificates.html
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-4/
+#-------------------------------------------------------------#
+
+# The directory from where to copy the K8s certificates
+k8s_ca_source_directory: "{{ '~/k8s/certs/kubernetes' | expanduser }}"
+
+# Name of the inventory host group.
+k8s_ca_master_group_name: "cluster_master"
+k8s_ca_worker_group_name: "cluster_worker"
+
+# The interface on which the K8s services should listen on.
+k8s_ca_master_interface: "enp0s8"
+k8s_ca_worker_interface: "enp0s8"
+
+# Variables from kube-apiserver -------------------------------
+
+# Determine the files name for generating authorization certificates (SSL/TLS)
+k8s_ca_apiserver_files_name:
+  ca_config_json: "ca-k8s-apiserver-config"
+  ca_csr_json: "ca-k8s-apiserver-csr"
+  cert_csr_json: "cert-k8s-apiserver-csr"
+  ca_pem: "ca-k8s-apiserver"
+  ca_key_pem: "ca-k8s-apiserver-key"
+  cert_pem: "cert-k8s-apiserver"
+  cert_key_pem: "cert-k8s-apiserver-key"
+
+# Set list(hostnames) to generate certificate from cluster(kube-apiserver)
+k8s_ca_apiserver_cert_hosts:
+  - localhost
+  - 0.0.0.0
+  - 127.0.0.1
+  - 10.0.2.15
+  - 10.32.0.1
+  - kubernetes
+  - kubernetes.default
+  - kubernetes.default.svc
+  - kubernetes.default.svc.cluster.local
+
+# Expiry for Kubernetes API server root certificates
+k8s_ca_apiserver_expiry: "87600h"
+
+# Certificate authority for Kubernetes API server
+k8s_ca_apiserver_root_csr_cn: "kubernetes"                             # Common Name
+k8s_ca_apiserver_root_csr_key_algo: "rsa"                              # Key Algorithm
+k8s_ca_apiserver_root_csr_key_size: "2048"                             # Key Size
+k8s_ca_apiserver_root_csr_names_o: "Kubernetes"                        # Organization
+k8s_ca_apiserver_root_csr_names_ou: "Kubernetes Security(API Server)"  # Organization Unit
+k8s_ca_apiserver_root_csr_names_l: "San Francisco"                     # City
+k8s_ca_apiserver_root_csr_names_st: "California"                       # State
+k8s_ca_apiserver_root_csr_names_c: "USA"                               # Country
+
+# CSR parameter for Kubernetes API server certificate
+k8s_ca_apiserver_cert_csr_cn: "kubernetes"                             # Common Name
+k8s_ca_apiserver_cert_csr_key_algo: "rsa"                              # Key Algorithm
+k8s_ca_apiserver_cert_csr_key_size: "2048"                             # Key Size
+k8s_ca_apiserver_cert_csr_names_o: "Kubernetes"                        # Organization
+k8s_ca_apiserver_cert_csr_names_ou: "Kubernetes Security(API Server)"  # Organization Unit
+k8s_ca_apiserver_cert_csr_names_l: "San Francisco"                     # City
+k8s_ca_apiserver_cert_csr_names_st: "California"                       # State
+k8s_ca_apiserver_cert_csr_names_c: "USA"                               # Country
+
+# Variables from kube-proxy -----------------------------------
+
+# Determine the files name for generating authorization certificates (SSL/TLS)
+k8s_ca_proxy_files_name:
+  cert_csr_json: "cert-k8s-proxy-csr"
+  cert_pem: "cert-k8s-proxy"
+  cert_key_pem: "cert-k8s-proxy-key"
+
+# CSR parameter for the kube-proxy client certificate
+k8s_ca_proxy_cert_csr_cn: "system:kube-proxy"                # Common Name (DO NOT CHANGE!)
+k8s_ca_proxy_cert_csr_key_algo: "rsa"                        # Key Algorithm
+k8s_ca_proxy_cert_csr_key_size: "2048"                       # Key Size
+k8s_ca_proxy_cert_csr_names_o: "system:node-proxier"         # Organization (DO NOT CHANGE!)
+k8s_ca_proxy_cert_csr_names_ou: "Kubernetes Security(Proxy)" # Organization Unit
+k8s_ca_proxy_cert_csr_names_l: "San Francisco"               # City
+k8s_ca_proxy_cert_csr_names_st: "California"                 # State
+k8s_ca_proxy_cert_csr_names_c: "USA"                         # Country
+
+# Variables from kubelet-workers ------------------------------
+
+# Determine the files name for generating authorization certificates (SSL/TLS)
+# Obs: #### replace for Current Worker
+k8s_ca_kubelet_files_name:
+  cert_csr_json: "cert-k8s-kubelet-####-csr"
+  cert_pem: "cert-k8s-kubelet-####"
+  cert_key_pem: "cert-k8s-kubelet-####-key"
+
+# CSR parameter for kubelet client certificates
+k8s_ca_kubelet_cert_csr_key_algo: "rsa"                          # Key Algorithm
+k8s_ca_kubelet_cert_csr_key_size: "2048"                         # Key Size
+k8s_ca_kubelet_cert_csr_names_o: "system:node-workers"           # Organization (DO NOT CHANGE!)
+k8s_ca_kubelet_cert_csr_names_ou: "Kubernetes Security(Kubelet)" # Organization Unit
+k8s_ca_kubelet_cert_csr_names_l: "San Francisco"                 # City
+k8s_ca_kubelet_cert_csr_names_st: "California"                   # State
+k8s_ca_kubelet_cert_csr_names_c: "USA"                           # Country
+
+# Variables from Kubectl --------------------------------------
+
+# Determine the files name for generating authorization certificates (SSL/TLS)
+k8s_ca_kubectl_files_name:
+  cert_csr_json: "cert-k8s-kubectl-csr"
+  cert_pem: "cert-k8s-kubectl"
+  cert_key_pem: "cert-k8s-kubectl-key"
+
+# CSR parameter for the admin user certificate
+k8s_ca_kubectl_cert_csr_cn: "admin"                                # Common Name
+k8s_ca_kubectl_cert_csr_key_algo: "rsa"                            # Key Algorithm
+k8s_ca_kubectl_cert_csr_key_size: "2048"                           # Key Size
+k8s_ca_kubectl_cert_csr_names_o: "system:node-masters"             # Organization (DO NOT CHANGE!)
+k8s_ca_kubectl_cert_csr_names_ou: "Kubernetes Security(Kubectl)"   # Organization Unit
+k8s_ca_kubectl_cert_csr_names_l: "San Francisco"                   # City
+k8s_ca_kubectl_cert_csr_names_st: "California"                     # State
+k8s_ca_kubectl_cert_csr_names_c: "USA"                             # Country

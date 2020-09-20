@@ -1,0 +1,40 @@
+<resources>
+    <!-- Base application theme. -->
+    <!--
+        Base application theme for API 11+. This theme completely replaces
+        AppBaseTheme from res/values/styles.xml on API 11+ devices.
+    -->
+    <style name="Theme.ThemeCustomBase" parent="Theme.AppCompat.Light.NoActionBar">
+
+        <item name="colorControlNormal">@android:color/holo_red_dark</item>
+
+    </style>
+
+    <!-- Application theme. -->
+    <!--
+        Base application theme for API 14+. This theme completely replaces
+        AppBaseTheme from BOTH res/values/styles.xml and
+        res/values-v11/styles.xml on API 14+ devices.
+    -->
+    <style name="Theme.ThemeCustomMain" parent="Theme.ThemeCustomBase">
+
+    </style>
+
+    <!-- ToolBar -->
+    <style name="Theme.ThemeCustomToolbar" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorAccent">@color/accentColor</item>
+
+        <item name="android:textColorPrimary">@android:color/primary_text_dark</item>
+        <item name="android:textColorSecondary">@android:color/secondary_text_dark</item>
+        <item name="android:textColor">@color/primaryText</item>
+    </style>
+
+    <!-- ToolBar for Bottom -->
+    <style name="Theme.ThemeCustomToolbarBottom" parent="Theme.ThemeCustomToolbar">
+        <item name="colorPrimary">@android:color/white</item>
+
+    </style>
+
+</resources>

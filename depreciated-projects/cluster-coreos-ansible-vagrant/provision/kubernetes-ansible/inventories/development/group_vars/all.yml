@@ -1,0 +1,116 @@
+---
+
+# -------------------------------------------------------------------- #
+# #### BLOBAL VARIABLES
+# -------------------------------------------------------------------- #
+
+# Determine the type of distribution(coreos, centos, ubuntu) environment.
+global_env_system: coreos
+
+# Determine the type of deployment environment.
+global_env_depl: development
+
+# Determine the files source directory of the GENERATE/BUILD.
+# Path: /home/you_user/kubernetes-files...
+global_env_build_path: "{{ '~/kubernetes-files/' + global_env_depl | expanduser }}"
+
+# #### Variables files for Playbooks.
+global_vars_file:
+  # Public variables to be used in all Tasks and Playbooks.
+  public: "{{ playbook_dir + '/library/variables/vars-public.yml' }}"
+  # Specific variables to a given Linux distribution.
+  system: "{{ inventory_dir + '/system_vars/dist-' + global_env_system + '.yml' }}"
+  # SSH connection variables, for remote access to the machines.
+  ssh_initial: "{{ inventory_dir + '/connection_vars/ssh-initial.yml' }}"
+  ssh_deploy: "{{  inventory_dir + '/connection_vars/ssh-deploy.yml' }}"
+
+# Determine name of the inventory host group.
+global_group:
+  all: "cluster_all"
+  etcd: "cluster_etcd"
+  master: "cluster_master"
+  worker: "cluster_worker"
+  k8s_all: "cluster_k8s_all"
+
+# NOTE!!!
+# The versions of the tools are already pre-defined by the Packer image.
+# If you want to modify some version, just alter the desired line below:
+# Versions coming from a Packer image.
+global_kubernetes_version: "1.10.0"
+global_etcd_version: "3.2.15"
+global_rkt_version: "1.30.0"
+global_docker_version: "18.04.0"
+global_flannel_version: "0.10.0"
+global_peervpn_version: "0-044"
+
+# The directory from where to copy the Etcd certificates.
+# From role: etcd-ca
+global_etcd_ca_source_directory: "{{ global_env_build_path + '/certs/etcd' }}"
+
+# The directory from where to copy the K8s certificates.
+# From role: kubernetes-ca
+global_k8s_ca_source_directory: "{{ global_env_build_path + '/certs/kubernetes' }}"
+
+# The directory from where to copy the K8s kubeconfigs.
+# From role: kubernetes-configs
+global_k8s_configs_source_directory: "{{ global_env_build_path + '/kubeconfigs' }}"
+
+# CHANGE THIS VALUE!
+# Enable and configure encryption of secret data at rest.
+# Font: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+# From role: kubernetes-configs
+global_k8s_configs_cluster_name: "cluster-kubernetes-{{global_env_depl}}"
+# Run command to generate key: $ openssl rand -base64 382 | tr -d '\n' && echo
+global_k8s_configs_encryption_key: "YLXdi1xnNLOM4+IUd5aeNO6ps6JaKYTCDaMYJRrD+gk="
+
+# CHANGE THIS VALUE!
+# Run command to generate key: $ openssl rand -base64 382 | tr -d '\n' && echo
+# From role: peervpn-network
+global_peervpn_encryption_key: "YLXdi1xnNLOM4+IUd5aeNO6ps6JaKYTCDaMYJRrD+gk="
+
+# As all cluster communication should use the PeerVPN interface
+# the interface name is normally "tap0" or "peervpn0".
+# From role: peervpn-network
+global_peervpn_interface: "peervpn0"
+
+# The interface on which services should listen.
+# From role: etcd
+global_etcd_interface: "{{ global_peervpn_interface }}"
+# From role: kubernetes-master
+global_master_interface: "{{ global_peervpn_interface }}"
+# From role: kubernetes-worker
+global_worker_interface: "{{ global_peervpn_interface }}"
+
+
+# -------------------------------------------------------------------- #
+# #### KUBERNETES SUPPORT SERVICES:
+# -------------------------------------------------------------------- #
+
+# The directory from where to copy the K8s serviceconfigs.
+# From role: kubernetes-services
+global_k8s_service_source_directory: "{{ global_env_build_path + '/serviceconfigs' }}"
+
+# Publish the Network Policy Service
+# From role: kubernetes-services
+global_k8s_service_calico_canal: false
+
+# #### INSTALL: Traefik Service
+
+# Publish HTTP reverse proxy and load balancer
+# From role: kubernetes-services
+global_k8s_service_traefik: false
+
+# #### DEPENDENCY: Traefik Service
+
+# Publish the Monitoring Service
+# From role: kubernetes-services
+global_k8s_service_kube_web: false
+global_k8s_service_graylog: false
+global_k8s_service_netdata: false
+global_k8s_service_prometheus: false
+global_k8s_service_grafana: false
+
+# Publish the Continuous Integration Service
+# From role: kubernetes-services
+global_k8s_service_jenkins: false
+global_k8s_service_rocket_chat: false

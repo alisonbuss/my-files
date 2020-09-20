@@ -1,0 +1,69 @@
+---
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+# 1ª) Step:
+- name: "Install CFSSL PKI toolkit for generates certificate authority TLS"
+  hosts: localhost
+  become: true
+  become_user: root
+  vars_files:
+    - "./library/variables/global/vars-global.yml"
+  roles:
+    - role: install-cfssl
+      tags: role-install-cfssl
+      when: true
+
+# 2ª) Step:
+- name: "Install kubectl command line utility used to interact with the Kubernetes API Server"
+  hosts: localhost
+  become: true
+  become_user: root
+  vars_files:
+    - "./library/variables/global/vars-global.yml"
+  roles:
+    - role: install-kubectl
+      tags: role-install-kubectl
+      when: true
+
+# 3ª) Step:
+- name: "Generate certificate authority for (Etcd)"
+  hosts: localhost
+  vars_files:
+    - "./library/variables/global/vars-global.yml"
+  roles:
+    - role: generate-ca-etcd
+      tags: role-generate-ca-etcd
+      when: true
+
+# 4ª) Step:
+- name: "Generate certificate authority for Kubernetes(kube-apiserver, kube-proxy, kubelet-workers, kubectl)"
+  hosts: localhost
+  vars_files:
+    - "./library/variables/global/vars-global.yml"
+  roles:
+    - role: generate-ca-k8s
+      vars:
+        generate_ca_kube_apiserver: true
+        generate_ca_kube_proxy: true
+        generate_ca_kubelet_worker: true
+        generate_ca_kubectl: true
+      tags: role-generate-ca-k8s
+      when: true
+
+# 5ª) Step:
+- name: "Generate Kubernetes Configuration Files(kubeconfigs) for Authentication"
+  hosts: localhost
+  vars_files:
+    - "./library/variables/global/vars-global.yml"
+  roles:
+    - role: generate-kubeconfigs
+      vars:
+        generate_config_kubelets: true
+        generate_config_kube_proxy: true
+        generate_config_encryption: true
+      tags: role-generate-kubeconfigs
+      when: true

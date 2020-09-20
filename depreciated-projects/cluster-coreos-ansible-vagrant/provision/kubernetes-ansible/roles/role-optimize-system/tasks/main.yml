@@ -1,0 +1,37 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Apply basic security settings such as: (User creation, Privileges, 
+#         Settings in sysctl, sshd and iptables)
+# @fonts: https://github.com/githubixx/ansible-role-harden-linux
+#         https://www.linode.com/docs/security/firewalls/control-network-traffic-with-iptables/
+#         https://www.digitalocean.com/community/tutorials/how-to-isolate-servers-within-a-private-network-using-iptables
+#         https://www.booleanworld.com/depth-guide-iptables-linux-firewall/
+#         https://medium.com/@jasonrigden/hardening-ssh-1bcb99cd4cef
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-2/
+#         http://docs.ansible.com/ansible/latest/modules/user_module.html
+#         http://docs.ansible.com/ansible/latest/modules/authorized_key_module.html
+#         http://docs.ansible.com/ansible/latest/modules/sysctl_module.html
+#         http://bencane.com/2012/09/17/iptables-linux-firewall-rules-for-a-basic-web-server/
+#         http://engineering.invisionapp.com/post/coreos-system-logs/
+#-------------------------------------------------------------#
+
+# Defining Config Start.
+- import_tasks: config-start.yml
+  when: (system_start == true)
+
+# Enable System Logging.
+- import_tasks: config-system-log.yml
+  when: (system_log == true)
+
+# Defining Config Update.
+- import_tasks: config-update.yml
+  when: (system_update == true)
+
+# Defining Config Update Service.
+- import_tasks: config-update-routine.yml
+  when: (system_update_routine == true)
+
+# Customize the kernel and system settings through SysCtl.
+- import_tasks: config-sysctl-settings.yml
+  when: (true)
+

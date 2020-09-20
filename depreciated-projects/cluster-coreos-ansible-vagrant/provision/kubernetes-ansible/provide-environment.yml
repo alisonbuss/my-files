@@ -1,0 +1,74 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: https://www.jeffgeerling.com/blog/2018/reboot-and-wait-reboot-complete-ansible-playbook
+#-------------------------------------------------------------#
+
+# PING ##########################################################
+- name: "PING -- Initiating the testing of 'ping' on all host"
+  hosts: "cluster_all"
+  become: false ## By default, keep false.
+  gather_facts: false
+  vars_files: 
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_initial }}"
+  tasks:
+    - action: ping
+  tags:
+    - environment
+    - ping
+
+# SETUP #########################################################
+- name: "SETUP -- Initiating the execution of the ansible 'setup' (Gather Facts)"
+  hosts: "cluster_all"
+  become: false ## By default, keep false.
+  gather_facts: false
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_initial }}"
+  tasks:
+    - action: setup
+  tags:
+    - environment
+    - setup
+
+# REBOOT ########################################################
+- name: "REBOOT -- Initiating system reboot of all hosts"
+  hosts: "cluster_all"
+  become: false ## By default, keep false.
+  gather_facts: false
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_initial }}"
+  tasks:
+    - name: "Restart machine"
+      shell: "sleep 3 && sudo shutdown -r now"
+      async: 1
+      poll: 0
+    - name: "Wait for the machine to finish rebooting"
+      wait_for_connection:
+        connect_timeout: 22
+        sleep: 6
+        delay: 6
+        timeout: 330
+  tags:
+    - environment
+    - reboot
+
+# INFO ##########################################################
+- name: "INFO -- Initiating collecting information from all hosts"
+  hosts: "cluster_all"
+  become: false ## By default, keep false.
+  gather_facts: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_initial }}"
+  tasks:
+    - import_tasks: "{{playbook_dir}}/library/tasks/environment/get-info/task.yml"
+  tags:
+    - environment
+    - info

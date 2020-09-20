@@ -1,0 +1,50 @@
+---
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+
+# 1
+# $ kubectl apply -f deployment.yml
+
+# 2
+# $ kubectl apply -f service.yml
+
+# 3
+# $ kubectl apply -f ingress.yml
+
+
+- name: Create Kubernetes Services(App gibimba) config directory
+  file:
+    path: "{{ k8s_service_app_example_source_directory }}"
+    state: directory
+
+- name: Copy ...."
+  copy:
+    src: "./files/{{item}}"
+    dest: "{{k8s_service_app_example_source_directory}}/{{item}}"
+  with_items:
+    - "deployment.yml"
+    - "service.yml"
+    - "ingress.yml"
+
+- name: "Deploy Service(App gibimba) deployment.yml"
+  shell: "kubectl apply -f {{ k8s_service_app_example_source_directory }}/deployment.yml"
+  register: kubectl_apply_deployment
+
+- name: "Output: Deploy Service(App gibimba) deployment.yml"
+  debug:
+    msg: "RESULT: {{ kubectl_apply_deployment.stdout }}"
+
+- name: "Deploy Service(App gibimba) service.yml"
+  shell: "kubectl apply -f {{ k8s_service_app_example_source_directory }}/service.yml"
+  register: kubectl_apply_service
+
+- name: "Output: Deploy Service(App gibimba) service.yml"
+  debug:
+    msg: "RESULT: {{ kubectl_apply_service.stdout }}"
+
+- name: "Deploy Service(App Exgibimbaample) ingress.yml"
+  shell: "kubectl apply -f {{ k8s_service_app_example_source_directory }}/ingress.yml"
+  register: kubectl_apply_ingress
+
+- name: "Output: Deploy Service(App gibimba) ingress.yml"
+  debug:
+    msg: "RESULT: {{ kubectl_apply_ingress.stdout }}"

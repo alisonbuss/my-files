@@ -1,0 +1,115 @@
+
+<ly-site>
+    
+    <h2 class="text-center">
+        Register Your Account Now!
+    </h2>
+
+    <br/>
+
+    <div class="row">
+        <div class="offset-md-2 col-md-8 offset-lg-2 col-lg-8">
+
+            <form #f="ngForm" (ngSubmit)="onSubmitRegister(f)">
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="firstName">First name</label>
+                        <input type="text"
+                               id="firstName"
+                               #firstName="ngModel"
+                               [(ngModel)]="model.firstName"
+                               name="firstName"
+                               required
+                               [class.is-invalid]="!firstName.valid && firstName.touched"
+                               class="form-control" placeholder="First name">
+                        <div *ngIf="!firstName.valid && firstName.touched" class="invalid-feedback">
+                            Field required!
+                        </div>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="lastName">Last name</label>
+                        <input type="text"
+                               id="lastName"
+                               #lastName="ngModel"
+                               [(ngModel)]="model.lastName"
+                               name="lastName"
+                               required
+                               [class.is-invalid]="!lastName.valid && lastName.touched"
+                               class="form-control" placeholder="Last name">
+                        <div *ngIf="!lastName.valid && lastName.touched" class="invalid-feedback">
+                            Field required!
+                        </div>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="sex">Select your gender:</label>
+                        <select id="sex"
+                                #sex="ngModel"
+                                [(ngModel)]="model.sex"
+                                name="sex"
+                                required
+                                [class.is-invalid]="!sex.valid && sex.touched"
+                                class="form-control">
+                            <option value=""></option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                        <div *ngIf="!sex.valid && sex.touched" class="invalid-feedback">
+                            Field required!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="email">Email address</label>
+                        <input type="email"
+                               id="email"
+                               #email="ngModel"
+                               [(ngModel)]="model.email"
+                               (blur)="onKeyUpCheckEmail($event.target.value)"
+                               name="email"
+                               required
+                               email
+                               [class.is-invalid]="!email.valid && email.touched"
+                               class="form-control" placeholder="Enter email">
+                        <div *ngIf="!email.valid && email.touched" class="invalid-feedback">
+                            Invalid field!
+                        </div>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="inputPassword">Password</label>
+                        <input type="password"
+                               id="password"
+                               #password="ngModel"
+                               [(ngModel)]="model.password"
+                               name="password"
+                               required
+                               [class.is-invalid]="!password.valid && password.touched"
+                               class="form-control" placeholder="Password">
+                        <div *ngIf="!password.valid && password.touched" class="invalid-feedback">
+                            Field required!
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" [disabled]="!f.valid" class="btn btn-primary">
+                    Register New Account
+                </button>
+
+                <!-- <comp-form-debug [form]="f"></comp-form-debug> -->
+
+            </form>
+
+        </div>
+    </div>
+
+    <br/><br/>
+
+    <p class="text-center">
+        <a routerLinkActive="active" routerLink="/login">Back to Login</a> 
+        &nbsp; &nbsp; | &nbsp; &nbsp;  
+        <a routerLinkActive="active" routerLink="/login/recover-account">Recover Account</a>
+    </p>
+
+</ly-site>

@@ -1,0 +1,57 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Create an authenticated administrator "user/client" to access a Kubernetes API Server.
+# @fonts: https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubectlconfig/kubectlconfig.yml
+#-------------------------------------------------------------#
+
+- name: Get IP address of first host in (cluster-k8s-master) group and use as API server
+  set_fact:
+    apiServer: |
+      {% set item = groups["cluster_k8s_master"][0] %}
+      {{ hostvars[item]['ansible_' + k8s_config_master_interface].ipv4.address }}
+
+- name: Remove newline from API server IP address
+  set_fact:
+    apiServer: "{{apiServer | replace('\n', '')}}"
+
+- name: Output of hostnames/IPs of first host in (cluster-k8s-master) group
+  debug: var=apiServer
+
+- name: kubectl config set-cluster
+  shell: |
+      kubectl config set-cluster {{k8s_config_cluster_name}} \
+              --certificate-authority={{k8s_certs_source_directory}}/kube-apiserver-ca.pem \
+              --embed-certs=true \
+              --server=https://{{apiServer}}:6443
+  register: set_cluster
+
+- debug:
+    msg: "COMMAND:{{set_cluster.cmd}} | OUTPUT: {{set_cluster.stdout}}"
+
+- name: kubectl config set-credentials admin
+  shell: |
+      kubectl config set-credentials admin \
+              --client-certificate={{k8s_certs_source_directory}}/kubectl-cert.pem \
+              --client-key={{k8s_certs_source_directory}}/kubectl-cert-key.pem
+  register: set_credentials
+
+- debug:
+    msg: "COMMAND:{{set_credentials.cmd}} | OUTPUT: {{set_credentials.stdout}}"
+
+- name: kubectl config set-context
+  shell: |
+      kubectl config set-context {{k8s_config_cluster_name}} \
+              --cluster={{k8s_config_cluster_name}} \
+              --user=admin
+  register: set_context
+
+- debug:
+    msg: "COMMAND:{{set_context.cmd}} | OUTPUT: {{set_context.stdout}}"
+
+- name: kubectl config use-context
+  shell: |
+      kubectl config use-context {{k8s_config_cluster_name}}
+  register: use_context
+
+- debug:
+    msg: "COMMAND:{{use_context.cmd}} | OUTPUT: {{use_context.stdout}}"

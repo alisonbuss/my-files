@@ -1,0 +1,4 @@
+---
+
+# Location of the Python installation in remote system(CentOS).
+ansible_python_interpreter: /usr/bin/python

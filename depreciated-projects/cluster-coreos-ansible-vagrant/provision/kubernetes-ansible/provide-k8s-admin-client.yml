@@ -1,0 +1,78 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: https://bash.cyberciti.biz/guide/Logical_Not_!
+#         https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php
+#-------------------------------------------------------------#
+
+# 0ª) Step:
+#
+# Install the JMESPath tool, a query language for JSON. 
+# It will be used with Ansible to apply filter to JSON lists.
+# @fonts: http://jmespath.org/
+#         http://jmespath.org/examples.html
+#         https://github.com/jmespath/jmespath.py
+#         https://github.com/jmespath/jmespath.terminal
+#         http://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html#json-query-filter
+- name: "Installation the Python Pip and JMESPath tool, a query language for JSON, using in Ansible"
+  hosts: "localhost"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  tasks:
+    - name: "Install the Python Pip and JMESPath tool"
+      shell: |
+          if ! [ $(which pip) ] ; then
+              apt install python-pip;
+              pip install jmespath;
+              pip install jmespath-terminal;
+          fi
+      ignore_errors: true
+      when: (ansible_distribution == 'Ubuntu')
+  tags:
+    - kubernetes-client
+    - jmespath
+
+# 1ª) Step:
+- name: "Install CFSSL PKI toolkit for generates certificate authority TLS"
+  hosts: "localhost"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  roles:
+    - role: role-client-cfssl
+      tags: role-client-cfssl
+      when: true
+  tags:
+    - kubernetes-client
+    - client-cfssl
+
+# 2ª) Step:
+- name: "Install kubectl command line utility used to interact with the Kubernetes API Server"
+  hosts: "localhost"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  roles:
+    - role: role-client-kubectl
+      vars:
+        kubectl_version: "{{ global_kubernetes_version }}"
+      tags: role-client-kubectl
+      when: true
+  tags:
+    - kubernetes-client
+    - client-kubectl
+
+# 3ª) Step:
+- name: "Install Kubernetic, The Kubernetes Desktop Client"
+  hosts: "localhost"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+  roles:
+    - role: role-client-kubernetic
+      tags: role-client-kubernetic
+      when: true
+  tags:
+    - kubernetes-client
+    - client-kubernetic

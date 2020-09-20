@@ -1,0 +1,21 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------
+
+- name: "Create the admin user(kubectl) key CSR file"
+  template:
+    src: "../templates/cert-kubectl-csr.json.j2"
+    dest: "{{k8s_ca_source_directory}}/{{ k8s_ca_kubectl_files_name.cert_csr_json }}.json"
+
+- name: "Generate TLS certificate for admin user(kubectl)"
+  shell: | 
+    cfssl gencert \
+          -ca={{ k8s_ca_apiserver_files_name.ca_pem }}.pem \
+          -ca-key={{ k8s_ca_apiserver_files_name.ca_key_pem }}.pem \
+          -config={{ k8s_ca_apiserver_files_name.ca_config_json }}.json \
+          -profile=kubernetes {{ k8s_ca_kubectl_files_name.cert_csr_json }}.json | cfssljson -bare {{ k8s_ca_kubectl_files_name.cert_pem }}
+  args:
+    chdir: "{{k8s_ca_source_directory}}"
+    creates: "{{k8s_ca_source_directory}}/{{ k8s_ca_kubectl_files_name.cert_key_pem }}"

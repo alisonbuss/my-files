@@ -1,0 +1,15 @@
+# Disable root login altogether
+PermitRootLogin no  
+
+# Turn off password authentication
+PasswordAuthentication no 
+
+# No longer prompt for login
+ChallengeResponseAuthentication no  
+
+# Stop processing of keyboard based authentication altogether
+UsePAM no   
+
+UseDNS no
+AuthenticationMethods publickey
+Subsystem sftp internal-sftp

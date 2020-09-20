@@ -1,0 +1,58 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: https://starkandwayne.com/blog/jenkins-builds-from-cli/
+#-------------------------------------------------------------#
+
+https://starkandwayne.com/blog/jenkins-builds-from-cli/
+
+# 1ª) Step:
+- name: "Provide firewall security criteria through IpTables (All hosts Etcd)"
+  hosts: cluster_etcd
+  become: true
+  become_user: root
+  vars_files:
+    - "{{ global_vars_file_public }}"
+    - "{{ global_vars_file_ssh_deploy }}"
+  roles:
+    - role: config-security-iptables
+      vars:
+        security_ip4tables_rules_overwrite: |
+          *filter
+          :INPUT DROP [0:0]
+          :FORWARD DROP [0:0]
+          :OUTPUT ACCEPT [0:0]
+          # Accept all loopback (local) traffic:
+          -A INPUT -i lo -j ACCEPT
+          # Keep existing connections (like our SSH session) alive:
+          -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+          # Accept all TCP/IP traffic to SSH
+          -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+          # Accept pings:
+          -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
+          -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+          # Enable Iptables LOG
+          -A INPUT   -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-INPUT----> " 
+          -A FORWARD -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-FORWARD--> " 
+          -A OUTPUT  -j LOG --log-level 4 --log-prefix "IPTABLE-IPV4-OUTPUT---> " 
+          COMMIT
+      tags: role-config-security-iptables
+      when: true
+
+
+
+# 3ª) Step:
+- name: "Provide a storage cluster Etcd(Key/Value)"
+  hosts: cluster_etcd
+  become: true
+  become_user: root
+  vars_files:
+    - "{{ global_vars_file_public }}"
+    - "{{ global_vars_file_ssh_deploy }}"
+  roles:
+    - role: config-etcd
+      vars:
+        etcd_version: "{{ global_etcd_version }}"
+      tags: role-config-etcd
+      when: true

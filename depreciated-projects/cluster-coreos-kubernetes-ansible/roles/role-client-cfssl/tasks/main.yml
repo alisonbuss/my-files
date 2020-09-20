@@ -1,0 +1,43 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Install CFSSL(CloudFlare's PKI toolkit) binaries for generates certificate authority TLS
+# @fonts: https://github.com/githubixx/ansible-role-cfssl
+#         https://github.com/cloudflare/cfssl
+#-------------------------------------------------------------#
+
+# Print the current operating system and the supported systems in the role.
+- name: "Output: View current system and supported systems by the role"
+  debug:
+    msg: "--Current System:[{{system_current}}] --System Supported:[{{system_support_centos}},{{system_support_ubuntu}}]"
+
+- name: "Register cfssl installation status"
+  become: false
+  shell: "which cfssl"
+  register: cfssl_installed
+  ignore_errors: true
+
+- name: "Output: cfssl installation status"
+  debug:
+    msg: "RESULT: {% if cfssl_installed.rc == 0 %}installed{% else %}not installed{% endif %}"
+
+- name: "Download statically linked cfssl binary"
+  get_url:
+    url: "https://pkg.cfssl.org/{{cfssl_version}}/cfssl_{{cfssl_os}}-{{cfssl_arch}}"
+    dest: "{{cfssl_bin_directory}}/cfssl"
+    #checksum: "{{cfssl_checksum}}"
+    validate_certs: no
+    mode: 0755
+    owner: "{{cfssl_owner}}"
+    group: "{{cfssl_group}}"
+  when: cfssl_installed is failed
+
+- name: "Download statically linked cfssljson binary"
+  get_url:
+    url: "https://pkg.cfssl.org/{{cfssl_version}}/cfssljson_{{cfssl_os}}-{{cfssl_arch}}"
+    dest: "{{cfssl_bin_directory}}/cfssljson"
+    #checksum: "{{cfssljson_checksum}}"
+    validate_certs: no
+    mode: 0755
+    owner: "{{cfssl_owner}}"
+    group: "{{cfssl_group}}"
+  when: cfssl_installed is failed

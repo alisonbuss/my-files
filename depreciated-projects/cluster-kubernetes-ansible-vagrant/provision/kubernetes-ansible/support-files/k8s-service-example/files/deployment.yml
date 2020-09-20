@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-com
+  namespace: default
+  labels:
+    app: example-com
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: example-com
+  template:
+    metadata:
+      labels:
+        app: example-com
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.12.0
+        ports:
+        - containerPort: 80

@@ -1,0 +1,111 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/traefik/install_or_update_etcd.yml
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-8/      
+#-------------------------------------------------------------#
+
+- name: Create Kubernetes Services(Traefik) config directory
+  file:
+    path: "{{ k8s_service_traefik_source_directory }}"
+    state: directory
+
+- name: Output first Etcd host selected
+  debug: var=first_host_etcd
+
+- name: Check if etcd contains /traefik/acme/account/lock key
+  shell: "ETCDCTL_API=3 {{ etcd_bin_dir }}/etcdctl --endpoints=http://localhost:{{ etcd_client_port }} get /traefik/acme/account/lock"
+  register: lock_configured
+  run_once: true
+  delegate_to: "{{ first_host_etcd }}"
+  tags:
+    - traefik-etcd-key
+
+- name: Create etcd key /traefik/acme/account/lock (if needed)
+  shell: "ETCDCTL_API=3 {{ etcd_bin_dir }}/etcdctl --endpoints=http://localhost:{{ etcd_client_port }} put /traefik/acme/account/lock ''"
+  when: lock_configured.stdout == ""
+  run_once: true
+  delegate_to: "{{ first_host_etcd }}"
+  tags:
+    - traefik-etcd-key
+
+- name: Check if etcd contains /traefik/acme/account/object key
+  shell: "ETCDCTL_API=3 {{ etcd_bin_dir }}/etcdctl --endpoints=http://localhost:{{ etcd_client_port }} get /traefik/acme/account/object"
+  register: object_configured
+  run_once: true
+  delegate_to: "{{ first_host_etcd }}"
+  tags:
+    - traefik-etcd-key
+
+- name: Create etcd key /traefik/acme/account/object (if needed)
+  shell: "ETCDCTL_API=3 {{ etcd_bin_dir }}/etcdctl --endpoints=http://localhost:{{ etcd_client_port }} put /traefik/acme/account/object ''"
+  when: object_configured.stdout == ""
+  run_once: true
+  delegate_to: "{{ first_host_etcd }}"
+  tags:
+    - traefik-etcd-key
+
+- name: Check if secret is already deployed
+  shell: "kubectl get secret --namespace=kube-system traefik-etcd"
+  register: kubectl
+  failed_when: "not (('not found' in kubectl.stderr) or ('' in kubectl.stdout))"
+  tags:
+    - traefik-secret
+
+- name: Deploy secret (if needed)
+  command: "kubectl create secret generic traefik-etcd --from-file={{ etcd_certs_source_directory }}/{{ etcd_ca_file }} --from-file={{ etcd_certs_source_directory }}/{{ etcd_cert_file }} --from-file={{ etcd_certs_source_directory }}/{{ etcd_cert_key_file }} --namespace=kube-system"
+  when: kubectl.rc == 1
+  tags:
+    - traefik-secret
+
+- name: Create temporary deployment file for Traefik ClusterRole
+  copy:
+    content: "{{ traefik_clusterrole }}"
+    dest: "{{ k8s_service_traefik_source_directory }}/traefik_clusterrole.yaml"
+    mode: 0600
+  tags:
+    - traefik-clusterrole
+
+- name: Deploy Traefik ClusterRole
+  command: "kubectl apply -f {{ k8s_service_traefik_source_directory }}/traefik_clusterrole.yaml"
+  tags:
+    - traefik-clusterrole
+
+- name: Create temporary deployment file for Traefik ClusterRoleBinding
+  copy:
+    content: "{{ traefik_clusterrolebinding }}"
+    dest: "{{ k8s_service_traefik_source_directory }}/traefik_clusterrolebinding.yaml"
+    mode: 0600
+  tags:
+    - traefik-clusterrolebinding
+
+- name: Deploy Traefik ClusterRoleBinding
+  command: "kubectl apply -f {{ k8s_service_traefik_source_directory }}/traefik_clusterrolebinding.yaml"
+  tags:
+    - traefik-clusterrolebinding
+
+- name: Create temporary deployment file for Traefik ServiceAccount
+  copy:
+    content: "{{ traefik_serviceaccount }}"
+    dest: "{{ k8s_service_traefik_source_directory }}/traefik_serviceaccount.yaml"
+    mode: 0600
+  tags:
+    - traefik-serviceaccount
+
+- name: Deploy Traefik ServiceAccount
+  command: "kubectl apply -f {{ k8s_service_traefik_source_directory }}/traefik_serviceaccount.yaml"
+  tags:
+    - traefik-serviceaccount
+
+- name: Create temporary deployment file for Traefik DaemonSet
+  copy:
+    content: "{{ traefik_daemonset }}"
+    dest: "{{ k8s_service_traefik_source_directory }}/traefik_daemonset.yaml"
+    mode: 0600
+  tags:
+    - traefik-daemonset
+
+- name: Deploy Traefik DaemonSet
+  command: "kubectl apply -f {{ k8s_service_traefik_source_directory }}/traefik_daemonset.yaml"
+  tags:
+    - traefik-daemonset

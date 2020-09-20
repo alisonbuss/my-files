@@ -1,0 +1,45 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Generate Kubernetes configuration files for authentication 
+#         Kube-Proxy Client on a Kubernetes API Server.
+# @fonts: https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kube-proxy.yml
+#-------------------------------------------------------------#
+
+- name: "Get IP address of first host in (cluster-k8s-master) group and use as API server"
+  set_fact:
+    var_kube_apiserver: |
+      {% set item = groups[kubeconfigs_master_group_name][0] %}
+      {{ hostvars[item]['ansible_' + kubeconfigs_master_interface].ipv4.address }}
+
+- name: "Remove newline from API server IP address"
+  set_fact:
+    var_kube_apiserver: "{{ var_kube_apiserver | replace('\n', '') }}"
+
+- name: "Output of hostnames/IPs of first host in (cluster-k8s-master) group"
+  debug: var=var_kube_apiserver
+
+- name: "Generate a kubeconfig file for the kube-proxy service (set-cluster)"
+  shell: | 
+      kubectl config set-cluster {{kubeconfigs_cluster_name}} \
+              --certificate-authority={{kubeconfigs_ca_k8s_source_directory}}/ca-kube-apiserver.pem \
+              --embed-certs=true \
+              --server=https://{{var_kube_apiserver}}:6443 \
+              --kubeconfig={{kubeconfigs_source_directory}}/kube-proxy.kubeconfig
+
+- name: "Generate a kubeconfig file for the kube-proxy service (set-credentials)"
+  shell: |
+      kubectl config set-credentials kube-proxy \
+              --client-certificate={{kubeconfigs_ca_k8s_source_directory}}/ca-kube-proxy-cert.pem \
+              --client-key={{kubeconfigs_ca_k8s_source_directory}}/ca-kube-proxy-cert-key.pem \
+              --embed-certs=true \
+              --kubeconfig={{kubeconfigs_source_directory}}/kube-proxy.kubeconfig
+
+- name: "Generate a kubeconfig file for the kube-proxy service (set-context)"
+  shell: |
+      kubectl config set-context default \
+              --cluster={{kubeconfigs_cluster_name}} \
+              --user=kube-proxy \
+              --kubeconfig={{kubeconfigs_source_directory}}/kube-proxy.kubeconfig
+
+- name: "Set use-context"
+  shell: "kubectl config use-context default --kubeconfig={{kubeconfigs_source_directory}}/kube-proxy.kubeconfig"

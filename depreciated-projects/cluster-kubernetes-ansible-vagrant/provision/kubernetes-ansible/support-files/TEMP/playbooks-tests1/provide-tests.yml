@@ -1,0 +1,153 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: https://leucos.github.io/ansible-files-layout
+#         http://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_includes.html
+#-------------------------------------------------------------#
+
+# - import_playbook: ./playbooks-tests/infrastructure.yml 
+#   when: false
+
+# - name: "Initiating the execution of the 'setup' ansible command"
+#   hosts: cluster_etcd
+#   tasks:
+#     - name: gather facts
+#       action: setup
+
+
+# - name: "Provide encrypted network traffic using PeerVPN and basic host security"
+#   hosts: cluster_etcd
+#   become: true
+#   become_user: root
+#   vars_files:
+#     - "./library/variables/global/vars-global.yml"
+#   vars:
+#     host_index: "{{ ansible_play_batch.index(inventory_hostname) | int + 1 }}"
+#     var_hosts_etcd: |
+#       {% set comma = joiner(",") %}
+#       {% for host in groups['cluster_etcd'] -%}
+#         {{ comma() }}https://{{ hostvars[host]['ansible_enp0s8'].ipv4.address }}:2379
+#       {%- endfor %}
+
+#   pre_tasks:
+#     - name: "Formatting the etcd endpoint"
+#       set_fact:
+#         var_hosts_etcd_format: "{{ var_hosts_etcd | replace('\n', '') }}"
+
+#     - name: "Output: Increment variable"
+#       debug:
+#         msg: "RESULT: {{ host_index }}"
+
+#     - name: "Output: inventory_hostname"
+#       debug:
+#         msg: "RESULT: {{ inventory_hostname }}"
+
+#     - name: "Output: Get private IP"
+#       debug:
+#         msg: "RESULT: {{ ansible_host }}"
+
+#     - name: "Output: Get host name"
+#       debug:
+#         msg: "RESULT: {{ ansible_hostname }}"
+
+#     - name: "Output: Get domain name"
+#       debug:
+#         msg: "RESULT: {{ ansible_domain }}"
+
+#     - name: "Output: Get host name and domain"
+#       debug:
+#         msg: "RESULT: {{ ansible_hostname }}.{{ ansible_domain }}"
+    
+#     - name: "Output: Endpoint formatted from the ETCD cluster"
+#       debug:
+#         msg: "RESULT: {{ var_hosts_etcd_format }}"
+
+#   roles:
+#     - role: config-peervpn
+#       vars:
+#         peervpn_conf_ifconfig4: "10.3.0.{{ host_index }}/24"
+#         peervpn_conf_initpeers: "192.168.33.101 7000"
+#         peervpn_conf_interface: "peervpn0"
+#         peervpn_conf_psk: "password-for-cluster"
+#         peervpn_conf_user: "root"
+#         peervpn_conf_group: "sudo"
+#       tags: role-config-peervpn
+#       when: true
+
+
+# - name: "Initiating the execution of the encrypted network traffic using PeerVPN for security of hosts"
+#   hosts: cluster_etcd
+#   become: true
+#   become_user: root
+#   vars_files:
+#     - "./library/variables/global/vars-global.yml"
+#   vars:
+#     current_host_index: "{{ ansible_play_batch.index(inventory_hostname) | int + 1 }}"
+#     ipv4_address_first_master_host: "{{ hostvars[groups['cluster_k8s_master']|first]['ansible_host'] }}"
+#     var_hosts_etcd: |
+#       {% set comma = joiner(",") %}
+#       {% for host in groups['cluster_etcd'] -%}
+#         {{ comma() }}https://{{ hostvars[host]['ansible_enp0s8'].ipv4.address }}:2379
+#       {%- endfor %}
+#   pre_tasks:
+#     - name: "Output: Current incremental host value"
+#       debug:
+#         msg: "RESULT: {{ current_host_index }}"
+
+#     - name: "Output: IP address of the first master host"
+#       debug:
+#         msg: "RESULT: {{ ipv4_address_first_master_host }}"
+
+#     - name: "Output: Endpoint formatted from the ETCD cluster"
+#       debug:
+#         msg: "RESULT: {{ var_hosts_etcd | replace('\n', '') }}"
+
+
+
+# 1ª) Step:
+#
+#   security - user      -> Criar usuarios do sistema.
+#   security - user sshd -> Adicionar usuarios do sistema no .
+#   security - iptables  -> Definir regras de firewall e NATs.
+#   security - sysctl    -> Ajustar configurações do sysctl relacionadas à segurança (/proc filesystem)
+#
+- name: "Initiating the execution of the basic criteria of security of the hosts(Cluster ETCD)"
+  hosts: cluster_etcd
+  become: true
+  become_user: root
+  vars_files:
+    - "./library/variables/global/vars-global.yml"
+  vars: 
+    var_hosts_etcd: |
+      {% set comma = joiner(",") %}
+      {% for host in groups['cluster_etcd'] -%}
+        {{ comma() }}https://{{ hostvars[host]['ansible_enp0s8'].ipv4.address }}:2379
+      {%- endfor %}
+  roles:
+    - role: config-security-initial
+      vars:
+        security_remote_access_users:
+          - user: "deploy"
+            comment: "Specifies the user to log in to the remote host over SSH"
+            privilege: true
+            groups: 
+              - sudo
+            ssh_authorized_keys:
+              - "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+              - "{{ lookup('file', './library/authorized-key-ssh/deploy.pub') }}"
+        security_sshd_settings_merge:
+          "^Port ": "Port 22"
+          "^PermitTunnel": "PermitTunnel no"
+          "^PermitRootLogin": "PermitRootLogin no"
+          "^PasswordAuthentication": "PasswordAuthentication no"
+        security_sysctl_settings_merge:
+          "net.ipv4.ip_forward": 1
+          "net.ipv6.conf.all.forwarding": 1
+          "net.ipv6.conf.default.forwarding": 1
+        security_system_log_enable: true
+      tags: role-config-security-initial
+      when: false
+
+    - role: config-security-iptables
+      tags: role-config-security-iptables
+      when: true

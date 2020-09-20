@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Questions &amp; Answers</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_search">Search</string>
+    <string name="action_record">Record Video</string>
+    <string name="action_save">Save</string>
+    <string name="action_label">Add Label</string>
+    <string name="action_play">Play Video</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="hello_world_again">Hello world, again!</string>
+    <string name="second">Go To Second Activity</string>
+    <string name="second_activity_title">Second Activity</string>
+    <string name="title_activity_lista_formulario">Formulários</string>
+    <string name="loading">Carregando...</string>
+
+
+    <string name="title_activity_second">SecondActivity</string>
+    <string name="action_second_activity">SecondActivity</string>
+    <string name="action_facebook">Facebook</string>
+    <string name="action_youtube">YouTube</string>
+    <string name="action_google_plus">Google Plus</string>
+    <string name="action_linkedin">LinkedIn</string>
+    <string name="action_whatsapp">WhatsApp</string>
+    <string name="title_activity_detalhe_formulario">Detalhe do Formulario</string>
+    <string name="title_activity_cadastrar_formulario">Cadastrar Formulario</string>
+    <string name="title_activity_exibir_dados_cadastrados">Exibir Dados Cadastrados</string>
+
+</resources>

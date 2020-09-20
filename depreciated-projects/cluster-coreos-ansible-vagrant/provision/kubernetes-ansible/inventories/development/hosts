@@ -1,0 +1,67 @@
+
+# Defining the initial host address of the infrastructure.
+host_local           ansible_host=127.0.0.1
+
+host_etcd01          ansible_host=192.168.33.101
+host_etcd02          ansible_host=192.168.33.102
+
+host_master01        ansible_host=192.168.66.101
+
+host_worker01        ansible_host=192.168.99.101
+host_worker02        ansible_host=192.168.99.102
+
+####[ NEW MEMBERS ]####
+# Defining new members for current infrastructure.
+host_new_etcd03      ansible_host=192.168.33.103
+host_new_master02    ansible_host=192.168.66.102
+host_new_worker03    ansible_host=192.168.99.103
+
+# Defining the main groups of hosts in the environment.
+[localhost]
+host_local
+
+[cluster_etcd]
+host_etcd01
+host_etcd02
+
+[cluster_master]
+host_master01
+
+[cluster_worker]
+host_worker01
+host_worker02
+
+# Defining the Kubernetes host group.
+[cluster_k8s_all:children]
+cluster_etcd
+cluster_master
+cluster_worker
+
+####[ NEW MEMBERS ]####
+# Defining new members groups for future scheduling. 
+[new_members_etcd]
+host_new_etcd03
+
+[new_members_master]
+host_new_master02
+
+[new_members_worker]
+host_new_worker03
+
+# Defining host groups and members of the entire infrastructure.
+[cluster_all:children]
+cluster_etcd
+cluster_master
+cluster_worker
+new_members_etcd
+new_members_master
+new_members_worker
+
+# Defining the location of the Python installation environment.
+#[all:vars]
+# Location of the Python installation in remote system(CoreOS).
+#ansible_python_interpreter: /opt/bin/python
+# Location of the Python installation in remote system(CentOS).
+#ansible_python_interpreter: /usr/bin/python
+# Location of the Python installation in remote system(Ubuntu).
+#ansible_python_interpreter: /usr/bin/python

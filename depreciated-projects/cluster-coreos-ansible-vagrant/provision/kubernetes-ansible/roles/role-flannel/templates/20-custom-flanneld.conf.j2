@@ -1,0 +1,16 @@
+#jinja2: trim_blocks:False
+{%- macro etcd_hosts() -%}
+  {%- for host in groups[etcd_group_name] -%}
+    https://{{hostvars[host]['ansible_' + etcd_interface].ipv4.address}}:{{etcd_client_port}}{% if not loop.last %},{% endif %}
+  {%- endfor -%} 
+{%- endmacro -%}
+
+{%- set x=flannel_settings.__setitem__('etcd-endpoints',etcd_hosts()) -%}
+
+[Service]
+Environment="FLANNEL_IMAGE_TAG=v{{flannel_version}}"
+ExecStart=
+ExecStart=/usr/lib/coreos/flannel-wrapper $FLANNEL_OPTS \
+{%- for setting in flannel_settings|sort %}
+    --{{setting}}="{{flannel_settings[setting]}}" {% if not loop.last %}\{% endif %}
+{%- endfor %}

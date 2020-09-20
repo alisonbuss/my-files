@@ -1,0 +1,232 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: It installes the Kubernetes API server, scheduler and controller manager.
+# @fonts: https://github.com/githubixx/ansible-role-kubernetes-controller
+#-------------------------------------------------------------#
+
+# Print the current operating system and the supported systems in the role.
+- name: "Output: View current system and supported systems by the role"
+  debug:
+    msg: "--Current System:[{{system_current}}] --System Supported:[{{system_support_centos}},{{system_support_ubuntu}},{{system_support_coreos}}]"
+
+- name: "Create Kubernetes config directory"
+  file:
+    path: "{{k8s_conf_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: "Copy etcd certificates"
+  copy:
+    src: "{{etcd_ca_source_directory}}/{{item}}"
+    dest: "{{k8s_conf_dir}}/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "{{etcd_ca_pem_file}}"
+    - "{{etcd_cert_pem_file}}"
+    - "{{etcd_cert_key_pem_file}}"
+
+- name: "Copy Kubernetes certificates"
+  copy:
+    src: "{{k8s_ca_source_directory}}/{{item}}"
+    dest: "{{k8s_conf_dir}}/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "{{k8s_apiserver_ca_pem_file}}"
+    - "{{k8s_apiserver_cert_pem_file}}"
+    - "{{k8s_apiserver_cert_key_pem_file}}"
+
+- name: "Register whether the support folder contains the Kubernetes binaries"
+  shell: "ls {{k8s_support_files_dir}}/"
+  register: exists_support_files
+  ignore_errors: true
+
+- name: "Output: The support file or directory exist?"
+  debug:
+    msg: "RESULT: {% if exists_support_files.rc == 0 %}Contains the Kubernetes support directory [{{ exists_support_files.stdout | replace('\n', ',') }}]{% else %}It does not contain the Kubernetes support directory.{% endif %}"
+
+- name: "Downloading official Kubernetes(Master) binaries for (/opt/bin)"
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/v{{k8s_version}}/bin/linux/amd64/{{item}}
+    dest: "{{k8s_bin_dir}}"
+    validate_certs: no
+    mode: 0755
+  with_items:
+    - "{{k8s_master_binaries}}"
+  when: exists_support_files is failed
+
+- name: "Copy Kubernetes binaries into the directory(/support-files/...) for the Kubernetes execution(/opt/bin)"
+  copy:
+    src: "{{k8s_support_files_dir}}/{{item}}"
+    dest: "{{k8s_bin_dir}}"
+    mode: 0755
+  with_items:
+    - "{{k8s_master_binaries}}"
+  notify:
+    - restart kube-apiserver
+    - restart kube-controller-manager
+    - restart kube-scheduler
+  when: exists_support_files is success
+
+- name: "Copy encryption provider config file"
+  copy:
+    src: "{{k8s_configs_source_directory}}/encryption-config.yaml"
+    dest: "{{k8s_conf_dir}}/encryption-config.yaml"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Combine k8s_apiserver_settings and k8s_apiserver_settings_merge (if defined)"
+  set_fact:
+    k8s_apiserver_settings: "{{ k8s_apiserver_settings | combine( k8s_apiserver_settings_merge | default({}) ) }}"
+
+- name: "Create directory for services of the SystemD"
+  file:
+    path: "{{k8s_systemd_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Create systemd unit file for kube-apiserver"
+  template:
+    src: "../templates/kube-apiserver.service.j2"
+    dest: "{{k8s_systemd_dir}}/kube-apiserver.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - reload systemd
+
+- name: "Enable and start kube-apiserver"
+  systemd:
+    daemon_reload: yes
+    name: kube-apiserver
+    enabled: yes
+    state: started
+    no_block: yes
+
+- name: "Combine k8s_controller_manager_settings and k8s_controller_manager_settings_merge (if defined)"
+  set_fact:
+    k8s_controller_manager_settings: "{{ k8s_controller_manager_settings | combine( k8s_controller_manager_settings_merge | default({}) ) }}"
+
+- name: "Create systemd unit file for kube-controller-manager"
+  template:
+    src: "../templates/kube-controller-manager.service.j2"
+    dest: "{{k8s_systemd_dir}}/kube-controller-manager.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - reload systemd
+
+- name: "Enable and start kube-controller-manager"
+  systemd:
+    daemon_reload: yes
+    name: kube-controller-manager
+    enabled: yes
+    state: started
+    no_block: yes
+
+- name: "Combine k8s_scheduler_settings and k8s_scheduler_settings_merge (if defined)"
+  set_fact:
+    k8s_scheduler_settings: "{{ k8s_scheduler_settings | combine( k8s_scheduler_settings_merge | default({}) ) }}"
+ 
+- name: "Create systemd unit file for kube-scheduler"
+  template:
+    src: "../template/kube-scheduler.service.j2"
+    dest: "{{k8s_systemd_dir}}/kube-scheduler.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - reload systemd
+
+- name: "Enable and start kube-scheduler"
+  systemd:
+    daemon_reload: yes
+    name: kube-scheduler
+    enabled: yes
+    state: started
+    no_block: yes
+
+# TODO: Check if ClusterRole + ClusterRoleBinding are already configured
+
+- name: "Getting hostname from the first master host"
+  set_fact:
+    first_host_master: "{{ groups[k8s_master_group_name] | first }}"
+
+- name: "Output first master host selected"
+  debug: var=first_host_master
+
+- name: "Getting IP address from the current host"
+  set_fact:
+    ipv4_adress_current_host: "{{ hostvars[inventory_hostname]['ansible_' + k8s_master_interface].ipv4.address }}"
+
+- name: "Output IP address from the current host selected"
+  debug: var=ipv4_adress_current_host
+
+- name: "Copy kube-apiserver-to-kubelet ClusterRole"
+  copy:
+    src: "../files/kube-apiserver-to-kubelet-cluster-role.yaml"
+    dest: "/tmp/kube-apiserver-to-kubelet-cluster-role.yaml"
+    mode: 0600
+  run_once: true
+  delegate_to: "{{first_host_master}}"
+
+- name: "Copy kube-apiserver-to-kubelet ClusterRoleBinding"
+  copy:
+    src: "../files/kube-apiserver-to-kubelet-cluster-role-binding.yaml"
+    dest: "/tmp/kube-apiserver-to-kubelet-cluster-role-binding.yaml"
+    mode: 0600
+  run_once: true
+  delegate_to: "{{first_host_master}}"
+
+- name: "Wait 300 seconds for kube-apiserver port 6443 to become open on the host"
+  wait_for:
+    port: 6443
+    delay: 5
+    host: "{{ipv4_adress_current_host}}"
+  run_once: true
+  delegate_to: "{{first_host_master}}"
+
+- name: "Wait 300 seconds for kube-apiserver port 8080 to become open on the host"
+  wait_for:
+    port: 8080
+    delay: 5
+    host: "{{ipv4_adress_current_host}}"
+  run_once: true
+  delegate_to: "{{first_host_master}}"
+
+- name: "Apply kube-apiserver-to-kubelet ClusterRole"
+  shell: "kubectl --server={{ipv4_adress_current_host}}:8080 apply -f /tmp/kube-apiserver-to-kubelet-cluster-role.yaml"
+  register: kube_apiserver_to_kubelet_cluster_role
+  run_once: true
+  delegate_to: "{{first_host_master}}"
+
+- debug:
+    msg: "COMMAND:{{kube_apiserver_to_kubelet_cluster_role.cmd}} | OUTPUT: {{kube_apiserver_to_kubelet_cluster_role.stdout}}"
+
+- name: "Apply kube-apiserver-to-kubelet ClusterRoleBinding"
+  shell: "kubectl --server={{ipv4_adress_current_host}}:8080 apply -f /tmp/kube-apiserver-to-kubelet-cluster-role-binding.yaml"
+  register: kube_apiserver_to_kubelet_cluster_role_binding
+  run_once: true
+  delegate_to: "{{first_host_master}}"
+
+- debug:
+    msg: "COMMAND:{{kube_apiserver_to_kubelet_cluster_role_binding.cmd}} | OUTPUT: {{kube_apiserver_to_kubelet_cluster_role_binding.stdout}}"
+
+- name: "Remove temporary files"
+  file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - "/tmp/kube-apiserver-to-kubelet-cluster-role.yaml"
+    - "/tmp/kube-apiserver-to-kubelet-cluster-role-binding.yaml"
+  run_once: true
+  delegate_to: "{{first_host_master}}"

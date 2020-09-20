@@ -1,0 +1,32 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the CFSSL rule.
+# @fonts: https://github.com/githubixx/ansible-role-cfssl
+#         https://github.com/cloudflare/cfssl
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+
+# Specifies the version of CFSSL toolkit we want to download and use
+cfssl_version: "R1.2"
+
+# SHA256 checksum of the archive see https://pkg.cfssl.org/R1.2/SHA256SUMS
+# for the checksums
+#cfssl_checksum: "sha256:eb34ab2179e0b67c29fd55f52422a94fe751527b06a403a79325fed7cf0145bd"
+#cfssljson_checksum: "sha256:1c9e628c3b86c3f2f8af56415d474c9ed4c8f9246630bd21c3418dbe5bf6401e"
+
+# Operarting system on which "cfssl" should run on
+cfssl_os: "linux" # use "darwin" for MacOS X, "windows" for Windows
+
+# Processor architecture "cfssl" should run on
+cfssl_arch: "amd64" # other possible values: "386","arm64","arm","ppc64le","s390x"
+
+# The directory where CFSSL binaries will be installed
+cfssl_bin_directory: "/usr/local/bin"
+
+# Owner of "cfssl" binary
+cfssl_owner: "root"
+
+# Group of "cfssl" binary
+cfssl_group: "root"

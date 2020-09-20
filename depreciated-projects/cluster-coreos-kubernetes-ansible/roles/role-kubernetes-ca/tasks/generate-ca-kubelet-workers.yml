@@ -1,0 +1,45 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Create the kubelet(worker) key CSR files"
+  vars:
+    var_worker_hostname: "{{ hostvars[item]['ansible_hostname'] }}"
+    var_name_cert_csr_json: "{{ k8s_ca_kubelet_files_name.cert_csr_json | replace('####', var_worker_hostname) }}"
+  template:
+    src: "../templates/cert-kubelet-csr.json.j2"
+    dest: "{{k8s_ca_source_directory}}/{{ var_name_cert_csr_json }}.json"
+  with_inventory_hostnames:
+    - "{{ k8s_ca_worker_group_name }}"
+
+- name: "Output of hostnames/IPs, generate TLS certificates for Kubernetes kubelet(worker) hosts"
+  vars:
+    var_worker_hostname: "{{ hostvars[item]['ansible_hostname'] }}"
+    var_ipv4_worker_address: "{{ hostvars[item]['ansible_' + k8s_ca_worker_interface].ipv4.address }}"
+    var_name_cert_csr_json: "{{ k8s_ca_kubelet_files_name.cert_csr_json | replace('####', var_worker_hostname) }}"
+  debug:
+    msg: "RESULT: {{ var_worker_hostname }}, {{ var_ipv4_worker_address }} -- {{ var_name_cert_csr_json }}"
+  with_inventory_hostnames:
+    - "{{ k8s_ca_worker_group_name }}"
+
+- name: "Generate TLS certificates for Kubernetes kubelet(worker) hosts"
+  vars:
+    var_worker_hostname: "{{ hostvars[item]['ansible_hostname'] }}"
+    var_ipv4_worker_address: "{{ hostvars[item]['ansible_' + k8s_ca_worker_interface].ipv4.address }}"
+    var_name_cert_csr_json: "{{ k8s_ca_kubelet_files_name.cert_csr_json | replace('####', var_worker_hostname) }}"
+    var_name_cert_pem: "{{ k8s_ca_kubelet_files_name.cert_pem | replace('####', var_worker_hostname) }}"
+    var_name_cert_key_pem: "{{ k8s_ca_kubelet_files_name.cert_key_pem | replace('####', var_worker_hostname) }}"
+  shell: | 
+    cfssl gencert \
+          -ca={{ k8s_ca_apiserver_files_name.ca_pem }}.pem \
+          -ca-key={{ k8s_ca_apiserver_files_name.ca_key_pem }}.pem \
+          -config={{ k8s_ca_apiserver_files_name.ca_config_json }}.json \
+          -hostname={{ var_worker_hostname }},{{ var_ipv4_worker_address }} \
+          -profile=kubernetes {{ var_name_cert_csr_json }}.json | cfssljson -bare {{ var_name_cert_pem }}
+  args:
+    chdir: "{{k8s_ca_source_directory}}"
+    creates: "{{k8s_ca_source_directory}}/{{ var_name_cert_key_pem }}.pem"
+  with_inventory_hostnames:
+    - "{{ k8s_ca_worker_group_name }}"

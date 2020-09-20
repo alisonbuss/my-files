@@ -1,0 +1,14 @@
+{
+    "CN": "system:node:{{hostvars[var_inventory_hostname]['ansible_hostname']}}",
+    "key": {
+        "algo": "{{k8s_ca_kubelet_cert_key_algo}}",
+        "size": {{k8s_ca_kubelet_cert_key_size}}
+    },
+    "names": [{
+        "C": "{{k8s_ca_kubelet_cert_names_c}}",
+        "L": "{{k8s_ca_kubelet_cert_names_l}}",
+        "O": "{{k8s_ca_kubelet_cert_names_o}}",
+        "OU": "{{k8s_ca_kubelet_cert_names_ou}}",
+        "ST": "{{k8s_ca_kubelet_cert_names_st}}"
+    }]
+}

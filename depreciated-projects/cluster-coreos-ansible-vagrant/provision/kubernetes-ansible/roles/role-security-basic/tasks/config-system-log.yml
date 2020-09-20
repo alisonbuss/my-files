@@ -1,0 +1,37 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Enable System Logging
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Define shell command to generate the log file"
+  set_fact:
+    COMMAND_BIN_BASH: "-c '/usr/bin/journalctl -o short -f > {{ security_system_log_folder }}/{{ security_system_log_file }}'"
+  when: (security_system_log_enable == true)
+
+- name: "Output: Final command to be executed in the service"
+  debug:
+    msg: "ExecStart=/usr/bin/bash {{ COMMAND_BIN_BASH }}"
+  when: (security_system_log_enable == true)
+
+# BEFORE - ExecStart=/usr/bin/bash -c '/usr/bin/journalctl -o short -f > /var/log/systemlog.log'
+# AFTER  - ExecStart=/usr/bin/bash {{ var_command_bin_bash }}
+- name: "Create systemd unit file for systemlog-output-local"
+  vars:
+    var_command_bin_bash: "{{ COMMAND_BIN_BASH }}"
+  template:
+    src: "./templates/systemlog-output-local.service.j2"
+    dest: "/etc/systemd/system/systemlog-output-local.service"
+    mode: 0644
+    owner: root
+    group: root
+  when: (security_system_log_enable == true)
+
+- name: "Enable and start service (systemlog-output-local)"
+  systemd:
+    daemon_reload: yes
+    name: systemlog-output-local
+    enabled: yes
+    state: started
+    no_block: no
+  when: (security_system_log_enable == true)

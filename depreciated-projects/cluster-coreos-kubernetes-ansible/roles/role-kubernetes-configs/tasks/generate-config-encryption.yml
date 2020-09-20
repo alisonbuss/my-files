@@ -1,0 +1,12 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Generating Kubernetes configuration files for 
+#         authentication, containing the encryption key.
+# @fonts: https://github.com/githubixx/ansible-kubernetes-playbooks/tree/master/kubeencryptionconfig
+#-------------------------------------------------------------#
+
+- name: "Create encryption config file"
+  template:
+    src: "../templates/encryption-config.yaml.j2"
+    dest: "{{k8s_configs_source_directory}}/encryption-config.yaml"
+    mode: 0600

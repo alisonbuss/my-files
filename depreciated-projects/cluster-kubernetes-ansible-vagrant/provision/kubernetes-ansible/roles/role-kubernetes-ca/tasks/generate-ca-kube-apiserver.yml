@@ -1,0 +1,62 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Generate list of IP addresses and hostnames needed for Kubernetes API Server certificate"
+  set_fact:
+    var_tmp_k8s_master_hosts: |
+      {% set comma = joiner(",") %}
+      {% for host in groups[k8s_ca_master_group_name] -%}
+        {{ comma() }}{{ hostvars[host]["ansible_hostname"] }}
+        {{ comma() }}{{ hostvars[host]['ansible_' + k8s_ca_master_interface].ipv4.address }}
+      {%- endfor %}
+      {% for host in groups[k8s_ca_worker_group_name] -%}
+        {{ comma() }}{{ hostvars[host]["ansible_hostname"] }}
+        {{ comma() }}{{ hostvars[host]['ansible_' + k8s_ca_worker_interface].ipv4.address }}
+      {%- endfor %}
+      {% for item in k8s_ca_apiserver_cert_hosts -%}
+        {{ comma() }}{{ item }}
+      {%- endfor %}
+
+- name: "Remove newline from master hosts list"
+  set_fact:
+    var_k8s_master_hosts: "{{ var_tmp_k8s_master_hosts | replace('\n', '') | replace(' ', '') }}"
+
+- name: "Output of hostnames/IPs used for Kubernetes API Server certificate"
+  debug: var=var_k8s_master_hosts
+
+- name: "Create Kubernetes API Server CA configuration file"
+  template:
+    src: "../templates/ca-apiserver-config.json.j2"
+    dest: "{{k8s_ca_source_directory}}/{{ k8s_ca_apiserver_files_name.ca_config_json }}.json"
+
+- name: "Copy the Kubernetes API Server CA certificate request file (CSR)"
+  template:
+    src: "../templates/ca-apiserver-csr.json.j2"
+    dest: "{{k8s_ca_source_directory}}/{{ k8s_ca_apiserver_files_name.ca_csr_json }}.json"
+
+- name: "Create the Kubernetes API Server key CSR file"
+  template:
+    src: "../templates/cert-apiserver-csr.json.j2"
+    dest: "{{k8s_ca_source_directory}}/{{ k8s_ca_apiserver_files_name.cert_csr_json }}.json"
+
+- name: "Generate the Kubernetes API Server CA and private key"
+  shell: "cfssl gencert -initca {{ k8s_ca_apiserver_files_name.ca_csr_json }}.json | cfssljson -bare {{ k8s_ca_apiserver_files_name.ca_pem }}"
+  args:
+    chdir: "{{k8s_ca_source_directory}}"
+    creates: "{{k8s_ca_source_directory}}/{{ k8s_ca_apiserver_files_name.ca_key_pem }}.pem"
+
+- name: "Generate TLS certificate for Kubernetes API Server"
+  shell: |
+    cfssl gencert \
+          -ca={{ k8s_ca_apiserver_files_name.ca_pem }}.pem \
+          -ca-key={{ k8s_ca_apiserver_files_name.ca_key_pem }}.pem \
+          -config={{ k8s_ca_apiserver_files_name.ca_config_json }}.json \
+          -hostname={{var_k8s_master_hosts}} \
+          -profile=kubernetes {{ k8s_ca_apiserver_files_name.cert_csr_json }}.json | cfssljson -bare {{ k8s_ca_apiserver_files_name.cert_pem }}
+  args:
+    chdir: "{{k8s_ca_source_directory}}"
+    creates: "{{k8s_ca_source_directory}}/{{ k8s_ca_apiserver_files_name.cert_key_pem }}.pem"
+

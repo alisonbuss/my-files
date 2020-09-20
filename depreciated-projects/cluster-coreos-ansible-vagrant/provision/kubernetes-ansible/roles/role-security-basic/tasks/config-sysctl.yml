@@ -1,0 +1,36 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Customize the kernel and system settings through SysCtl
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Copy configuration file of parameters from sysctl"
+  copy:
+    src: "/usr/lib/sysctl.d/baselayout.conf" # OR src: "./files/baselayout-overwrite.conf"
+    dest: "/etc/sysctl.d/baselayout-overwrite.conf"
+    remote_src: true
+    force: true
+    mode: 0644
+    owner: root
+    group: root
+
+- name: "Combine security_sysctl_settings and security_sysctl_settings_merge (if defined)"
+  set_fact:
+    security_sysctl_settings: "{{ security_sysctl_settings | combine(security_sysctl_settings_merge | default({})) }}"
+
+- name: "Sysctl settings"
+  sysctl:
+    name: "{{item}}"
+    value: "{{security_sysctl_settings[item]}}"
+    sysctl_file: "/etc/sysctl.d/baselayout-overwrite.conf"
+    sysctl_set: true
+    reload: false
+  with_items:
+    - "{{ security_sysctl_settings | list }}"
+  when: (security_sysctl_settings | list | length > 0)
+
+- name: "Restart service (sysctl)"
+  service:
+    name: systemd-sysctl
+    state: restarted
+  when: (security_sysctl_settings | list | length > 0)

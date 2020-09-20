@@ -1,0 +1,43 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Installs kubectl command line utility used to interact with the Kubernetes API Server
+# @fonts: https://github.com/githubixx/ansible-role-kubectl
+#         https://kubernetes.io/docs/tasks/tools/install-kubectl/
+#-------------------------------------------------------------#
+
+- name: "Register kubectl installation status"
+  become: false
+  shell: "which kubectl"
+  register: kubectl_installed
+  ignore_errors: true
+
+- name: "Output: kubectl installation status"
+  debug:
+    msg: "RESULT: {% if kubectl_installed.rc == 0 %}installed{% else %}not installed{% endif %}"
+
+- name: "Download kubernetes-client archive"
+  get_url:
+    url: "https://dl.k8s.io/v{{kubectl_version}}/kubernetes-client-{{kubectl_os}}-{{kubectl_arch}}.tar.gz"
+    dest: "{{kubectl_tmp_directory}}"
+    #checksum: "{{kubectl_checksum}}"
+    validate_certs: no
+    mode: 0755
+  when: kubectl_installed is failed
+
+- name: "Unarchive kubernetes-client"
+  unarchive:
+    src: "{{kubectl_tmp_directory}}/kubernetes-client-{{kubectl_os}}-{{kubectl_arch}}.tar.gz"
+    dest: "{{kubectl_tmp_directory}}"
+  when: kubectl_installed is failed
+
+- name: "Copy kubectl binary to destination directory"
+  copy:
+    src: "{{kubectl_tmp_directory}}/kubernetes/client/bin/{{item}}"
+    dest: "{{kubectl_bin_directory}}/{{item}}"
+    mode: 0755
+    owner: "{{kubectl_owner}}"
+    group: "{{kubectl_group}}"
+    remote_src: yes
+  with_items:
+    - kubectl
+  when: kubectl_installed is failed

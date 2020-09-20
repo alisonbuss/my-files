@@ -1,0 +1,41 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+# @fonts: 
+#-------------------------------------------------------------#
+
+- name: "Create the kubelet(worker) key CSR files"
+  vars:
+    - var_inventory_hostname: "{{ item }}"
+    - var_worker_hostname: "{{ hostvars[item]['ansible_hostname'] }}"
+  template:
+    src: "ca-kubelet-worker-cert-csr.json.j2"
+    dest: "{{k8s_ca_source_directory}}/ca-kubelet-{{ var_worker_hostname }}-cert-csr.json"
+  with_inventory_hostnames:
+    - "{{ k8s_ca_worker_group_name }}"
+
+- name: "Output of hostnames/IPs, generate TLS certificates for Kubernetes kubelet(worker) hosts"
+  vars:
+    - var_worker_hostname: "{{ hostvars[item]['ansible_hostname'] }}"
+    - var_ipv4_worker_address: "{{ hostvars[item]['ansible_' + k8s_ca_worker_interface].ipv4.address }}"
+  debug:
+    msg: "RESULT: {{ var_worker_hostname }}, {{ var_ipv4_worker_address }}"
+  with_inventory_hostnames:
+    - "{{ k8s_ca_worker_group_name }}"
+
+- name: "Generate TLS certificates for Kubernetes kubelet(worker) hosts"
+  vars:
+    - var_worker_hostname: "{{ hostvars[item]['ansible_hostname'] }}"
+    - var_ipv4_worker_address: "{{ hostvars[item]['ansible_' + k8s_ca_worker_interface].ipv4.address }}"  
+  shell: | 
+    cfssl gencert \
+          -ca=ca-kube-apiserver.pem \
+          -ca-key=ca-kube-apiserver-key.pem \
+          -config=ca-kube-apiserver-config.json \
+          -hostname={{ var_worker_hostname }},{{ var_ipv4_worker_address }} \
+          -profile=kubernetes ca-kubelet-{{ var_worker_hostname }}-cert-csr.json | cfssljson -bare ca-kubelet-{{ var_worker_hostname }}-cert
+  args:
+    chdir: "{{k8s_ca_source_directory}}"
+    creates: "{{k8s_ca_source_directory}}/ca-kubelet-{{ var_worker_hostname }}-cert-key.pem"
+  with_inventory_hostnames:
+    - "{{ k8s_ca_worker_group_name }}"

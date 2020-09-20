@@ -1,0 +1,45 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Generate Kubernetes configuration files for authentication 
+#         Kube-Proxy Client on a Kubernetes API Server.
+# @fonts: https://github.com/githubixx/ansible-kubernetes-playbooks/blob/master/kubeauthconfig/kube-proxy.yml
+#-------------------------------------------------------------#
+
+- name: "Get IP address of first host in (cluster-master) group and use as API server"
+  set_fact:
+    var_ipv4_address_first_master: |
+      {% set item = groups[k8s_configs_master_group_name][0] %}
+      {{ hostvars[item]['ansible_' + k8s_configs_master_interface].ipv4.address }}
+
+- name: "Remove newline from API server IP address"
+  set_fact:
+    var_ipv4_address_first_master: "{{ var_ipv4_address_first_master | replace('\n', '') }}"
+
+- name: "Output of hostnames/IPs of first host in (cluster-master) group"
+  debug: var=var_ipv4_address_first_master
+
+- name: "Generate a kubeconfig file for the kube-proxy service (set-cluster)"
+  shell: | 
+      kubectl config set-cluster {{k8s_configs_cluster_name}} \
+              --certificate-authority={{k8s_ca_source_directory}}/{{k8s_configs_apiserver_ca_pem_file}} \
+              --embed-certs=true \
+              --server=https://{{var_ipv4_address_first_master}}:6443 \
+              --kubeconfig={{k8s_configs_source_directory}}/kube-proxy.kubeconfig
+
+- name: "Generate a kubeconfig file for the kube-proxy service (set-credentials)"
+  shell: |
+      kubectl config set-credentials system:kube-proxy \
+              --client-certificate={{k8s_ca_source_directory}}/{{k8s_configs_proxy_cert_pem_file}} \
+              --client-key={{k8s_ca_source_directory}}/{{k8s_configs_proxy_cert_key_pem_file}} \
+              --embed-certs=true \
+              --kubeconfig={{k8s_configs_source_directory}}/kube-proxy.kubeconfig
+
+- name: "Generate a kubeconfig file for the kube-proxy service (set-context)"
+  shell: |
+      kubectl config set-context default \
+              --cluster={{k8s_configs_cluster_name}} \
+              --user=system:kube-proxy \
+              --kubeconfig={{k8s_configs_source_directory}}/kube-proxy.kubeconfig
+
+- name: "Set use-context"
+  shell: "kubectl config use-context default --kubeconfig={{k8s_configs_source_directory}}/kube-proxy.kubeconfig"

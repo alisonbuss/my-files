@@ -1,0 +1,26 @@
+
+<!-- Only display this menu if the user has authenticated. -->
+<nav *ngIf="showMenu" class="navbar navbar-dark bg-dark navbar-expand-sm">
+    <div class="container">
+        <a routerLink="/" class="navbar-brand" href="#">Publish Articles</a>
+        <button type="button" class="navbar-toggler" 
+                data-toggle="collapse" 
+                data-target="#navbarNavAltMarkup"
+                aria-controls="navbarNavAltMarkup" 
+                aria-expanded="false" 
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a routerLinkActive="active" routerLink="/admin" class="nav-item nav-link">Home <span class="sr-only">(current)</span></a>
+                <a routerLinkActive="active" routerLink="/admin/authors" [queryParams]="{page:1}" class="nav-item nav-link">Authors</a>
+                <a routerLinkActive="active" routerLink="/admin/authors/new" class="nav-item nav-link">New Author</a>
+                <a routerLinkActive="active" routerLink="/articles" class="nav-item nav-link">Articles</a>
+                <a routerLinkActive="active" routerLink="/" class="nav-item nav-link"><< Come Back</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+{{ valueTest }}

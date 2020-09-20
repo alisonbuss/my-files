@@ -1,0 +1,173 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: 
+#-------------------------------------------------------------#
+
+# 1ª) Step:
+- name: "Initiating optimization of the operating system for the entire cluster Kubernetes"
+  hosts: "cluster_k8s_all"
+  become: true
+  vars_files:
+    - "{{ global_vars_file.public }}"
+    - "{{ global_vars_file.system }}"
+    - "{{ global_vars_file.ssh_deploy }}"
+  vars:
+    system_current: "{{ global_system }}"
+  roles:
+    - role: role-optimize-system
+      vars:
+        system_log: true
+        system_update: true
+        system_update_schedule: true
+        system_custom: true
+        system_custom_sysctl: true
+        system_sysctl_settings_merge:
+          "net.ipv4.ip_forward": 1
+          "net.ipv6.conf.all.forwarding": 1
+          "net.ipv6.conf.default.forwarding": 1
+      tags: optimize-system
+  post_tasks:
+    - name: "Update Gather Facts..."
+      become: false
+      action: setup
+  tags:
+    - kubernetes-all
+    - optimize-system
+
+# # 2ª) Step:
+# - name: "Initiating the execution of the basic criteria of security of the cluster Kubernetes"
+#   hosts: "cluster_k8s_all"
+#   become: true
+#   vars_files:
+#     - "{{ global_vars_file.public }}"
+#     - "{{ global_vars_file.system }}"
+#     - "{{ global_vars_file.ssh_initial }}"
+#   vars:
+#     system_current: "{{ global_system }}"
+#   roles:
+#     - role: role-security-basic
+#       vars:
+#         security_remote_access_users:
+#           - user: "deploy"
+#             comment: "Specifies the user to log in to the remote host over SSH"
+#             privilege: true
+#             groups: 
+#               - sudo
+#             ssh_authorized_keys:
+#               #- "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+#               - "{{ lookup('file', '~/.vagrant.d/insecure_private_key') }}"
+#               #- "{{ lookup('file', playbook_dir + '/library/authorized-key-ssh/key-deploy.pub') }}"
+#         security_sshd_settings_merge:
+#           "^Port ": "Port 22"
+#           "^PermitTunnel": "PermitTunnel no"
+#           "^PermitRootLogin": "PermitRootLogin no"
+#           "^PasswordAuthentication": "PasswordAuthentication no"
+#       tags: security-basic
+
+#     #- role: role-security-iptables
+#     #  vars:
+#     #    security_ip4tables_log_enable: true
+#     #  tags: security-iptables
+
+#   post_tasks:
+#     - name: "Update Gather Facts..."
+#       become: false
+#       action: setup
+
+#   tags:
+#     - kubernetes-all
+#     - security-system
+
+
+
+
+
+
+# - name: "Initiating the execution of the 'setup' ansible, (Gather Facts)"
+#   hosts: "cluster_k8s_all"
+#   become: false ## By default, keep false.
+#   gather_facts: false
+#   vars_files: 
+#     - "{{ global_vars_file.public }}"
+#     - "{{ global_vars_file.system }}"
+#     - "{{ global_vars_file.ssh_deploy }}"
+#   tasks:
+#     - action: setup
+#   tags:
+#     - kubernetes-all
+#     - gather-facts
+
+
+# - name: "GGFDGDSGDSGDSGDSGDSGSGDSGGDSGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+#   hosts: "cluster_k8s_all"
+#   become: true
+#   vars_files:
+#     - "{{ global_vars_file.public }}"
+#     - "{{ global_vars_file.system }}"
+#     - "{{ global_vars_file.ssh_deploy }}"
+#   vars:
+#     system_current: "{{ global_system }}"
+#     var_current_host_index: "{{ ansible_play_batch.index(inventory_hostname) | int + 1 }}"
+#     var_ipv4_address_first_master: "{{ hostvars[groups[global_host_group.master]|first]['ansible_host'] }}"
+#   pre_tasks:
+#     - name: "Update Gather Facts..."
+#       become: false
+#       action: setup
+
+#     - name: "Output: Current incremental host value"
+#       debug:
+#         msg: "RESULT: {{ var_current_host_index }}"
+    
+#     - name: "Output: IP address of the first master host"
+#       debug:
+#         msg: "RESULT: {{ var_ipv4_address_first_master }}"
+#   post_tasks:
+#     - name: "Update Gather Facts..."
+#       become: false
+#       action: setup
+
+
+
+
+
+
+
+
+# # 3ª) Step:
+# - name: "Initiating the execution of encrypted network traffic by using PeerVPN for all cluster"
+#   hosts: "cluster_k8s_all"
+#   become: true
+#   vars_files:
+#     - "{{ global_vars_file.public }}"
+#     - "{{ global_vars_file.system }}"
+#     - "{{ global_vars_file.ssh_deploy }}"
+#   vars:
+#     system_current: "{{ global_system }}"
+#     var_current_host_index: "{{ ansible_play_batch.index(inventory_hostname) | int + 1 }}"
+#     var_ipv4_address_first_master: "{{ hostvars[groups[global_host_group.master]|first]['ansible_host'] }}"
+#   pre_tasks:
+#     - name: "Output: Current incremental host value"
+#       debug:
+#         msg: "RESULT: {{ var_current_host_index }}"
+    
+#     - name: "Output: IP address of the first master host"
+#       debug:
+#         msg: "RESULT: {{ var_ipv4_address_first_master }}"
+#   roles:
+#     - role: role-peervpn-network
+#       vars:
+#         peervpn_conf_ifconfig4: "10.33.0.{{ var_current_host_index }}/24"
+#         peervpn_conf_initpeers: "{{ var_ipv4_address_first_master }} 7000"
+#         peervpn_conf_interface: "{{ global_interface.peervpn }}"
+#         peervpn_conf_psk: "{{ global_peervpn_encryption_key }}"
+#         peervpn_conf_user: "root"
+#         peervpn_conf_group: "sudo"
+#         peervpn_version: "{{ global_version.peervpn }}"
+#       tags: peervpn-network
+#   post_tasks:
+#     - name: "Update Gather Facts..."
+#       become: false
+#       action: setup
+#   tags:
+#     - kubernetes-all
+#     - security-network

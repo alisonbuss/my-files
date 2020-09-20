@@ -1,0 +1,62 @@
+
+<ly-site>
+    
+    <h2 class="text-center">
+        Authenticate Your Account!
+    </h2>
+
+    <br/>
+
+    <div class="row">
+        <div class="offset-md-2 col-md-8 offset-lg-3 col-lg-6">
+
+            <form #f="ngForm" (ngSubmit)="onSubmitLogin(f)">
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input type="email"
+                           id="email"
+                           #email="ngModel"
+                           [(ngModel)]="model.email"
+                           name="email"
+                           required
+                           email
+                           [class.is-invalid]="!email.valid && email.touched"
+                           class="form-control" placeholder="Enter email">
+                    <div *ngIf="!email.valid && email.touched" class="invalid-feedback">
+                        Invalid field!
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputPassword">Password</label>
+                    <input type="password"
+                           id="password"
+                           #password="ngModel"
+                           [(ngModel)]="model.password"
+                           name="password"
+                           required
+                           [class.is-invalid]="!password.valid && password.touched"
+                           class="form-control" placeholder="Password">
+                    <div *ngIf="!password.valid && password.touched" class="invalid-feedback">
+                        Field required!
+                    </div>
+                </div>
+                <button type="submit" [disabled]="!f.valid" class="btn btn-primary">
+                    Submit
+                </button>
+
+                <!-- <comp-form-debug [form]="f"></comp-form-debug> -->
+
+            </form>
+
+        </div>
+    </div>
+
+    <br/><br/>
+
+    <p class="text-center">
+        <a routerLinkActive="active" routerLink="/login/create-account">Create Account</a> 
+        &nbsp; &nbsp; | &nbsp; &nbsp;  
+        <a routerLinkActive="active" routerLink="/login/recover-account">Recover Account</a>
+    </p>
+
+</ly-site>

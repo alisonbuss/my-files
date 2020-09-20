@@ -1,0 +1,44 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the PeerVPN rule.
+# @fonts: https://github.com/githubixx/ansible-role-peervpn
+#         https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-3/
+#         https://peervpn.net/
+#-------------------------------------------------------------#
+
+# Current operating system of the environment.
+system_current: "{{ global_system | default('coreos') }}"
+# Operating system supported by the Role.
+system_support_centos: centos
+system_support_ubuntu: ubuntu
+system_support_coreos: coreos
+
+# PeerVPN release
+peervpn_version: "0-044"
+
+# The directory for running the PeerVPN binary
+peervpn_bin_dir: "/opt/bin"
+
+# The directory from services(*.service) of systemd.
+peervpn_systemd_dir: "/etc/systemd/system"
+
+# Directory of support files for system provisioning.
+peervpn_support_files_dir: "/support-files/peervpn-v{{peervpn_version}}"
+
+# Variables for PeerVPN settings
+peervpn_conf_initpeers: "host.example.net 7000"
+peervpn_conf_enableipv4: "yes"
+peervpn_conf_enableipv6: "no"
+peervpn_conf_networkname: "peervpn"
+peervpn_conf_local: "0.0.0.0"
+peervpn_conf_ifconfig4: "10.0.0.1/24"
+peervpn_conf_port: 7000
+peervpn_conf_interface: "tap0"
+peervpn_conf_user: "nobody"
+peervpn_conf_group: "nogroup"
+peervpn_conf_psk: "default"
+peervpn_conf_enabletunneling: "yes"
+peervpn_conf_enablenat64clat: "no"
+peervpn_conf_enableprivdrop: "yes"
+peervpn_conf_enablerelay: "no"
+peervpn_conf_sockmark: 0

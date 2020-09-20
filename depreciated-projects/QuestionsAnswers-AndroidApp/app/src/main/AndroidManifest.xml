@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.questionsanswers.app"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="11"
+        android:targetSdkVersion="18" />
+
+    <!-- Allow to connect with internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="18" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="18" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/logo"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.ThemeCustomBase" >
+        <activity
+            android:name=".HomeActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ListaFormularioActivity"
+            android:label="@string/title_activity_lista_formulario"
+            android:parentActivityName=".HomeActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.questionsanswers.app.HomeActivity" />
+        </activity>
+        <activity
+            android:name=".DetalheFormularioActivity"
+            android:label="@string/title_activity_detalhe_formulario"
+            android:parentActivityName=".ListaFormularioActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.questionsanswers.app.ListaFormularioActivity" />
+        </activity>
+        <activity
+            android:name=".CadastrarFormularioActivity"
+            android:label="@string/title_activity_cadastrar_formulario"
+            android:parentActivityName=".DetalheFormularioActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.questionsanswers.app.DetalheFormularioActivity" />
+        </activity>
+        <activity
+            android:name=".ExibirDadosCadastrados"
+            android:label="@string/title_activity_exibir_dados_cadastrados"
+            android:parentActivityName=".DetalheFormularioActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.questionsanswers.app.DetalheFormularioActivity" />
+        </activity>
+    </application>
+
+</manifest>

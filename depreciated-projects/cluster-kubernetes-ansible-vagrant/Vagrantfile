@@ -1,0 +1,77 @@
+# encoding: utf-8
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+require "json"
+MACHINES = JSON.parse(File.read(File.join(File.dirname(__FILE__),
+    "vagrant-machines.json"
+)))
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.require_version ">= 1.6.0"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+    # starting each instance of the JSON file(vagrant-machines.json) ---------------------------------
+    (MACHINES).each_with_index do |cluster, index|
+        # Verify that the cluster is active.
+        if cluster["active"] == true then
+            iterate = 0 # define "auto increment" of active machines.
+            # Browse active machine list.
+            cluster["machines"].each do |machine|
+                # Verify that the machine is active and initiating virtual cluster configuration -----
+                if machine["active"] == true then
+                    iterate = (iterate + 1) # auto increment of active machines.
+                    # define host name and domain ----------------------------------------------------
+                    _hostname = machine["hostname"]
+                    _domain   = machine["domain"]
+                    # define (Network) of the machine ------------------------------------------------
+                    _ip_address_static = machine["ip_address_static"]
+                    _interface = machine["interface"]
+                    # starting the configuration of the virtual machine ------------------------------
+                    config.vm.define "#{_hostname}.#{_domain}" do |subconfig|
+                        # define host name ----------------------------------------------------------
+                        subconfig.vm.hostname = _hostname
+                        # define the Vagrant Box -----------------------------------------------------
+                        subconfig.vm.box = machine["box"]
+                        # define access --------------------------------------------------------------
+                        # this sets the username that Vagrant will SSH.
+                        subconfig.ssh.username = "vagrant"
+                        # always use Vagrants insecure key.
+                        subconfig.ssh.insert_key = false
+                        # forward ssh agent to easily ssh into the different machines.
+                        subconfig.ssh.forward_agent = true
+                        # provider virtualbox setup --------------------------------------------------
+                        subconfig.vm.provider "virtualbox" do |virtualbox|
+                            virtualbox.name = "vm-" + _hostname
+                            virtualbox.cpus = machine["cpus"]
+                            virtualbox.memory = machine["memory"]
+                            virtualbox.gui = false
+                            virtualbox.functional_vboxsf = false
+                            virtualbox.check_guest_additions = false
+                            virtualbox.customize ["modifyvm", :id, "--cpuexecutioncap", "100"]
+                        end
+                        # define private network -----------------------------------------------------
+                        subconfig.vm.network "private_network", ip: "#{_ip_address_static}", auto_config: false
+                        # upload a directory to the guest machine ------------------------------------
+                        subconfig.vm.provision "file", source: "./provision/scripts-vagrant", destination: "/tmp/scripts-vagrant"
+                        # provide initial system base ------------------------------------------------
+                        subconfig.vm.provision "shell", inline: "bash /tmp/scripts-vagrant/config-start.sh $@", args:[
+                            "--hostname=#{_hostname}"
+                        ]
+                        subconfig.vm.provision "shell", inline: "bash /tmp/scripts-vagrant/config-network.sh $@", args:[
+                            "--hostname=#{_hostname}",
+                            "--domain=#{_domain}",
+                            "--ip-address=#{_ip_address_static}",
+                            "--interface=#{_interface}",
+                            "--gateway=192.168.0.1",
+                            "--dns=8.8.8.8"
+                        ]
+                        # installing python for the deployment environment for Ansible ---------------
+                        subconfig.vm.provision "shell", inline: "bash /tmp/scripts-vagrant/install-python.sh"
+                    end
+                end
+            end
+        end
+    end
+    # plugin conflict
+    if Vagrant.has_plugin?("vagrant-vbguest") then
+        config.vbguest.auto_update = false
+    end
+end

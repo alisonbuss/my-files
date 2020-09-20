@@ -1,0 +1,9 @@
+---
+#-----------------------|DOCUMENTATION|-----------------------#
+# @descr: Default variables to be used in the Traefik rule.
+# @fonts: https://www.tauceti.blog/post/kubernetes-the-not-so-hard-way-with-ansible-at-scaleway-part-8/
+#-------------------------------------------------------------#
+
+k8s_service_source_directory: "{{ '~/k8s/serviceconfigs' | expanduser }}"
+
+k8s_service_app_example_source_directory: "{{ k8s_service_source_directory }}/gibimba"
